@@ -1,0 +1,21 @@
+# tickr_alpha_engine requirements - full local quant
+# Core - already in master
+pandas
+numpy
+pyyaml
+yfinance
+polars
+
+# ML
+lightgbm
+xgboost
+scikit-learn
+optuna
+
+# Backtest
+vectorbt
+duckdb
+
+# Optional
+matplotlib
+tqdm

@@ -1,0 +1,12 @@
+polars
+pandas
+yfinance
+numpy
+scikit-learn
+lightgbm
+optuna
+vectorbt
+duckdb
+pyyaml
+mlflow
+tqdm
