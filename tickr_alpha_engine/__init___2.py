@@ -1,1 +1,0 @@
-# tickr alpha engine package

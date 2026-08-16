@@ -1,1 +1,0 @@
-# TICKR master package
