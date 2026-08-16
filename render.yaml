@@ -3,7 +3,7 @@ services:
     name: tickr-v14
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: cd tickr_website && gunicorn server:app
     healthCheckPath: /api/health
     envVars:
