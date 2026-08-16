@@ -1,1137 +1,373 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="192x192" href="tickr-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="tickr-512.png">
-<link rel="apple-touch-icon" href="tickr-192.png">
-<meta name="theme-color" content="#0a0a0a">
-<title>tickr v13 — conversational</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com"></script>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TICKR v14 — Portfolio</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-:root{--bg:#fefcf8;--card:#fff;--card2:#f7f5f0;--text:#0a0a0a;--text2:#78716c;--text3:#a8a29e;--border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.12);--accent:#0a0a0a;--green:#16a34a;--red:#dc2626;--logo-bg:#0a0a0a;--logo-f:#fff;--logo-arrow:#ccff00}
-*{font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased} .mono{font-family:"JetBrains Mono",monospace}
-body{background:var(--bg);color:var(--text)}
-.card{background:var(--card);border:1px solid var(--border);border-radius:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.logo-tile{background:var(--logo-bg);border-radius:12px;display:flex;align-items:center;justify-content:center}
-.glass{backdrop-filter:blur(20px) saturate(1.4)}
-.chat-bubble{max-width:85%;padding:10px 14px;border-radius:18px;font-size:13px;line-height:1.5;white-space:pre-wrap}
-.chat-user{background:var(--text);color:var(--bg);border-bottom-right-radius:6px;margin-left:auto}
-.chat-ai{background:var(--card2);border:1px solid var(--border);border-bottom-left-radius:6px}
-.holding-row:hover .holding-actions{opacity:1}
-.holding-actions{opacity:0;transition:opacity .15s}
-@media(max-width:1024px){.holding-actions{opacity:1}}
-.sector-header{position:sticky;top:0;z-index:1;padding:6px 8px;margin:8px 0 4px 0;border-radius:8px;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between}
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+:root {
+  --bg: #0a0a0b; --card: #141416; --border: #232326; --text: #e8e8ea; --muted: #9a9aa0;
+  --accent: #6d5cff; --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+}
+[data-theme="light"] { --bg:#fafafa; --card:#ffffff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --accent:#6d5cff; }
+[data-theme="forest"] { --bg:#0f1a14; --card:#1a2e22; --border:#2a4a35; --text:#d1e7d6; --muted:#8fb89a; --accent:#4ade80; }
+[data-theme="cyber"] { --bg:#050510; --card:#0f0f25; --border:#2a2a5a; --text:#c0c0ff; --muted:#8a8ab8; --accent:#00ffff; }
+[data-theme="midnight"] { --bg:#0c1220; --card:#131c2f; --border:#1e2a45; --text:#cbd5e1; --muted:#64748b; --accent:#60a5fa; }
+[data-theme="paper"] { --bg:#fdf6e3; --card:#fffbf0; --border:#e8dcc6; --text:#433422; --muted:#8d7d65; --accent:#b45309; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.5;transition:all .2s}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100}
+.logo{font-weight:900;font-size:20px;letter-spacing:-1px}
+.toggle{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px}
+.toggle button{padding:6px 16px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:13px}
+.toggle button.active{background:var(--accent);color:white}
+.stats{display:flex;gap:16px;align-items:center;font-size:13px}
+.stat b{color:var(--text)}
+.theme-btn{padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer}
+.layout{display:grid;grid-template-columns:300px 1fr 360px;gap:16px;padding:16px;min-height:calc(100vh - 60px)}
+@media(max-width:1200px){.layout{grid-template-columns:1fr;}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px}
+.card h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:12px}
+.input{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);margin-bottom:8px;font-size:14px}
+.btn{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:white;font-weight:600;cursor:pointer;width:100%}
+.btn-sm{padding:6px 10px;font-size:12px;width:auto}
+.holding{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.holding:last-child{border:none}
+.green{color:var(--green)} .red{color:var(--red)}
+.chart-wrap{position:relative;height:320px}
+.periods{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
+.periods button{padding:4px 10px;border:1px solid var(--border);background:var(--bg);color:var(--muted);border-radius:6px;cursor:pointer;font-size:12px}
+.periods button.active{background:var(--text);color:var(--bg)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.metric{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px}
+.metric .label{font-size:11px;color:var(--muted);text-transform:uppercase}
+.metric .value{font-size:16px;font-weight:700;margin-top:2px}
+.ai-box{max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
+.ai-msg{margin-bottom:8px;font-size:13px}
+.ai-msg.user{color:var(--accent)} .ai-msg.bot{color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-size:11px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;cursor:pointer;color:var(--muted)}
+.chip:hover{border-color:var(--accent);color:var(--text)}
+.news-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.news-item:hover{background:var(--bg)}
+.news-item a{color:var(--text);text-decoration:none;font-size:13px;font-weight:600;display:block}
+.news-item .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.watch-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.about{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);line-height:1.6}
+.placeholder{padding:40px;text-align:center;color:var(--muted)}
+.placeholder h2{color:var(--text);margin-bottom:8px}
 </style>
 </head>
-<body data-theme="tickr">
-<header class="sticky top-0 z-40 glass" style="background:color-mix(in srgb,var(--bg) 86%, transparent);border-bottom:1px solid var(--border);">
-<div class="max-w-[1680px] mx-auto px-5 h-[56px] flex items-center justify-between gap-3">
-<div class="flex items-center gap-2.5">
-<div class="logo-tile w-[32px] h-[32px]"><svg viewBox="0 0 100 100" width="32" height="32" fill="none"><path d="M50 18 L50 78" stroke="white" stroke-width="14" stroke-linecap="round"/><path d="M22 38 L72 38" stroke="white" stroke-width="14" stroke-linecap="round"/><path d="M34 64 L76 22" stroke="#ccff00" stroke-width="6" stroke-linecap="round"/><path d="M58 22 L76 22 L76 40" stroke="#ccff00" stroke-width="6" stroke-linecap="round" fill="none"/></svg></div>
-<span class="text-[18px] font-semibold lowercase">tickr</span>
-<span class="hidden md:flex items-center gap-1.5 ml-3 px-2.5 py-1 rounded-full text-[10px] mono" style="background:var(--card2);border:1px solid var(--border)"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span><span>v14 • Quant Lab + Paper Trading</span></span>
+<body data-theme="dark">
+<div class="topbar">
+  <div class="logo">TICKR v14</div>
+  <div class="toggle">
+    <button id="btn-portfolio" class="active" onclick="switchMode('portfolio')">Portfolio</button>
+    <button id="btn-quant" onclick="switchMode('quant')">Quant</button>
+    <button id="btn-paper" onclick="switchMode('paper')">Paper</button>
+  </div>
+  <div class="stats">
+    <div>Total: <b id="stat-total">$0</b></div>
+    <div>Day: <b id="stat-day">$0</b></div>
+    <button class="theme-btn" onclick="cycleTheme()">🎨 Theme</button>
+  </div>
 </div>
-<div class="flex items-center gap-1.5">
-<button id="paperBtn" class="px-2.5 h-8 rounded-[10px] text-[11px] font-medium bg-[#0a0a0a] text-white">🧪 Quant Lab</button>
-<button id="aiBtn" class="px-2.5 h-8 rounded-[10px] text-[11px] font-medium" style="background:var(--card);border:1px solid var(--border);">ai</button>
-<button id="aboutBtn" class="hidden sm:flex px-2.5 h-8 rounded-[10px] text-[11px]" style="background:var(--card);border:1px solid var(--border);">About</button>
-<div id="authArea"></div>
-</div>
-</div>
-</header>
 
-<main class="max-w-[1680px] mx-auto px-5 py-4 grid grid-cols-12 gap-4">
-<section class="col-span-12 lg:col-span-3 space-y-3">
-<div class="card p-4"><div class="flex items-center justify-between mb-2"><h2 class="text-[11px] font-semibold tracking-widest uppercase" style="color:var(--text2)">Portfolio — auto-load</h2><span id="portValue" class="mono text-[11px]">—</span></div>
-<div class="flex gap-1 mb-2 p-1 rounded-[10px]" style="background:var(--card2);"><button data-group="sector" class="group-btn flex-1 h-6 rounded-[8px] text-[10px] bg-[#0a0a0a] text-white">By Sector</button><button data-group="type" class="group-btn flex-1 h-6 rounded-[8px] text-[10px]" style="color:var(--text2)">By Type</button><button data-group="flat" class="group-btn flex-1 h-6 rounded-[8px] text-[10px]" style="color:var(--text2)">Flat</button></div>
-<div class="flex gap-1 mb-3"><input id="addSymbol" placeholder="AAPL" class="flex-1 h-8 px-2.5 rounded-[10px] text-[11px] outline-none" style="background:var(--card2);border:1px solid var(--border);"><input id="addQty" type="number" placeholder="Qty" class="w-12 h-8 px-2 rounded-[10px] text-[11px]" style="background:var(--card2);border:1px solid var(--border);"><input id="addAvg" type="number" placeholder="Avg" class="w-14 h-8 px-2 rounded-[10px] text-[11px]" style="background:var(--card2);border:1px solid var(--border);"></div>
-<button id="addHoldingBtn" class="w-full h-8 rounded-[12px] bg-[#0a0a0a] text-white text-[11px]">Add — auto categorizes</button>
-<div id="holdingsList" class="mt-3 space-y-0 max-h-[420px] overflow-y-auto"></div>
-<div id="sectorSummary" class="mt-3 p-2.5 rounded-[12px] text-[10px] mono" style="background:var(--card2);"></div>
-</div>
-</section>
-
-<section class="col-span-12 lg:col-span-6 space-y-3">
-<div class="card p-4"><div class="flex items-center justify-between"><h1 id="chartSymbol" class="text-[22px] font-semibold">SPY</h1><span id="chartPrice" class="mono text-[18px]">—</span></div><div class="flex gap-1 mt-2"><span id="chartChange" class="mono text-[11px]"></span><span id="chartName" class="text-[11px]" style="color:var(--text2)"></span></div><canvas id="stockChart" height="260" class="w-full mt-3"></canvas></div>
-<div class="grid grid-cols-2 gap-3"><div class="card p-3"><h3 class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Allocation — correct type</h3><div id="allocationBox" class="mt-2 space-y-1.5 text-[11px]"></div></div><div class="card p-3"><h3 class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Earnings</h3><div id="earningsList" class="mt-2 space-y-1.5 text-[11px]"></div></div></div>
-</section>
-
-<section class="col-span-12 lg:col-span-3 space-y-3">
-<div class="card p-3"><h2 class="text-[10px] font-semibold uppercase" style="color:var(--text2)">Watchlist — auto</h2><div class="flex gap-1 mt-2"><input id="watchInput" placeholder="MSFT" class="flex-1 h-7 px-2.5 rounded-[10px] text-[11px]" style="background:var(--card2);border:1px solid var(--border);"><button id="addWatchBtn" class="h-7 px-2.5 rounded-[8px] bg-[#0a0a0a] text-white text-[11px]">Add</button></div><div id="watchList" class="mt-2 space-y-1"></div></div>
-<div class="card p-3"><h3 class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Dividend Watch</h3><div id="dividendBox" class="mt-2 space-y-1.5 text-[11px]"></div></div>
-<div class="card p-3"><h2 class="text-[10px] font-semibold uppercase" style="color:var(--text2)">News — real article links (fixed)</h2><div id="newsList" class="mt-2 space-y-1.5"></div></div>
-</section>
-</main>
-
-
-<!-- PAPER TRADING / QUANT LAB SECTION -->
-<div id="paperTradingSection" class="hidden max-w-[1680px] mx-auto px-5 py-4">
-  <div class="flex items-center justify-between mb-4">
-    <div class="flex items-center gap-3">
-      <h1 class="text-[20px] font-semibold">Quant Lab — Paper Trading</h1>
-      <span class="px-2.5 py-1 rounded-full text-[10px] mono" style="background:#0a0a0a;color:white;">$100k VIRTUAL</span>
-      <span id="paperStatus" class="text-[11px]" style="color:var(--text2)">Loading...</span>
+<div id="portfolio-view" class="layout">
+  <!-- LEFT -->
+  <div>
+    <div class="card">
+      <h3>Add Shares</h3>
+      <input id="ticker-input" class="input" placeholder="Ticker e.g. AAPL" />
+      <input id="shares-input" class="input" type="number" placeholder="Shares e.g. 10" />
+      <input id="cost-input" class="input" type="number" placeholder="Avg Cost (optional)" />
+      <button class="btn" onclick="addPosition()">Add to Portfolio</button>
+      <div id="holdings-list" style="margin-top:12px"></div>
     </div>
-    <div class="flex items-center gap-2">
-      <button id="paperBackBtn" class="h-8 px-3 rounded-[10px] text-[11px]" style="background:var(--card);border:1px solid var(--border);">← Back to Portfolio</button>
-      <button id="paperResetBtn" class="h-8 px-3 rounded-[10px] text-[11px] bg-red-50 text-red-700 border border-red-200">Reset $100k</button>
+    <div class="card" style="margin-top:12px">
+      <h3>Watchlist — No Impact</h3>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <input id="watch-input" class="input" placeholder="Ticker" style="margin:0" />
+        <button class="btn btn-sm" onclick="addWatch()">+</button>
+      </div>
+      <div id="watch-list"></div>
     </div>
   </div>
 
-  <!-- Stats Row -->
-  <div class="grid grid-cols-4 gap-3 mb-4">
-    <div class="card p-4">
-      <div class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Cash</div>
-      <div id="paperCash" class="mono text-[20px] font-semibold mt-1">$100,000</div>
-      <div class="text-[10px] mt-1" style="color:var(--text2)">Available to trade</div>
+  <!-- CENTER -->
+  <div>
+    <div class="card">
+      <h3>Portfolio Equity — Real yfinance Data</h3>
+      <div class="periods">
+        <button onclick="setPeriod('5d')">5D</button>
+        <button onclick="setPeriod('1mo')" class="active">1M</button>
+        <button onclick="setPeriod('3mo')">3M</button>
+        <button onclick="setPeriod('6mo')">6M</button>
+        <button onclick="setPeriod('1y')">1Y</button>
+        <button onclick="setPeriod('ytd')">YTD</button>
+        <button onclick="setPeriod('max')">ALL</button>
+      </div>
+      <div class="chart-wrap"><canvas id="portfolioChart"></canvas></div>
+      <div class="metrics">
+        <div class="metric"><div class="label">Total Value</div><div class="value" id="m-total">$0</div></div>
+        <div class="metric"><div class="label">Day Gain</div><div class="value" id="m-day">$0</div></div>
+        <div class="metric"><div class="label">Total P/L</div><div class="value" id="m-pnl">$0</div></div>
+        <div class="metric"><div class="label">Diversification</div><div class="value" id="m-div">—</div></div>
+        <div class="metric"><div class="label">Holdings</div><div class="value" id="m-count">0</div></div>
+        <div class="metric"><div class="label">Best Performer</div><div class="value" id="m-best">—</div></div>
+      </div>
+      <div id="insights" style="margin-top:10px;font-size:13px;color:var(--muted)"></div>
     </div>
-    <div class="card p-4">
-      <div class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Equity</div>
-      <div id="paperEquity" class="mono text-[20px] font-semibold mt-1">$100,000</div>
-      <div id="paperPnL" class="mono text-[11px] mt-1" style="color:var(--text2)">$0 (0.00%)</div>
-    </div>
-    <div class="card p-4">
-      <div class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Positions</div>
-      <div id="paperPositionsCount" class="mono text-[20px] font-semibold mt-1">0</div>
-      <div id="paperTradesCount" class="text-[10px] mt-1" style="color:var(--text2)">0 trades</div>
-    </div>
-    <div class="card p-4">
-      <div class="text-[10px] uppercase font-semibold" style="color:var(--text3)">Quant Model</div>
-      <div id="quantModelName" class="text-[12px] font-medium mt-1">Loading...</div>
-      <div id="quantModelStatus" class="text-[10px] mt-1" style="color:var(--text2)">Checking quant_model.py</div>
+    <div class="card" style="margin-top:12px">
+      <h3>About — Why I Built TICKR</h3>
+      <div class="about">
+        I'm Asher, 15, from Syracuse. I built TICKR because I wanted a portfolio tracker that doesn't hallucinate prices and a place to test my quant ideas without mixing them with my real holdings. Portfolio mode is 100% yfinance real data — every price, chart point, and news article is from Yahoo Finance, not AI generated. Quant mode is separate so it can break without breaking my portfolio. This is v14 — portfolio only. Paper trading and Quant Lab come next.
+        <br><br>
+        <b>Metrics explained:</b> Diversification = 100 - % in largest sector. Day Gain = sum(shares × today change). Chart = weighted sum of real closes × shares. SPY line normalized to your start.
+      </div>
     </div>
   </div>
 
-  <div class="grid grid-cols-12 gap-4">
-    <!-- Left: Positions & Trading -->
-    <div class="col-span-12 lg:col-span-5 space-y-3">
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-[11px] font-semibold tracking-widest uppercase" style="color:var(--text2)">Paper Positions</h2>
-          <button id="refreshPaperBtn" class="h-6 px-2 rounded-[6px] text-[10px]" style="background:var(--card2);border:1px solid var(--border);">Refresh</button>
-        </div>
-        <div id="paperPositionsList" class="space-y-1 max-h-[280px] overflow-y-auto">
-          <div class="text-[11px] py-6 text-center" style="color:var(--text3)">No positions yet — run your quant model or place a manual trade</div>
-        </div>
+  <!-- RIGHT -->
+  <div>
+    <div class="card">
+      <h3>AI Portfolio Assistant — 30 Responses</h3>
+      <div id="ai-box" class="ai-box">
+        <div class="ai-msg bot">Hi! I read your real holdings from yfinance. Ask me anything — I have 30+ rule-based answers, no hallucinations.</div>
       </div>
-
-      <div class="card p-4">
-        <h2 class="text-[11px] font-semibold tracking-widest uppercase mb-3" style="color:var(--text2)">Manual Paper Trade</h2>
-        <div class="flex gap-2 mb-2">
-          <input id="paperSymbol" placeholder="AAPL" class="flex-1 h-9 px-3 rounded-[10px] text-[12px] outline-none" style="background:var(--card2);border:1px solid var(--border);">
-          <input id="paperQty" type="number" placeholder="Qty" class="w-20 h-9 px-3 rounded-[10px] text-[12px]" style="background:var(--card2);border:1px solid var(--border);">
-          <select id="paperAction" class="w-20 h-9 px-2 rounded-[10px] text-[12px]" style="background:var(--card2);border:1px solid var(--border);">
-            <option value="BUY">BUY</option>
-            <option value="SELL">SELL</option>
-          </select>
-        </div>
-        <div class="flex gap-2">
-          <button id="paperTradeBtn" class="flex-1 h-9 rounded-[10px] bg-[#0a0a0a] text-white text-[12px] font-medium">Execute Paper Trade</button>
-          <button id="paperQuoteBtn" class="w-20 h-9 rounded-[10px] text-[11px]" style="background:var(--card2);border:1px solid var(--border);">Quote</button>
-        </div>
-        <div id="paperTradeStatus" class="text-[10px] mt-2" style="color:var(--text2)"></div>
+      <div class="chips" id="ai-chips">
+        <span class="chip" onclick="askAI('How can I diversify?')">How can I diversify?</span>
+        <span class="chip" onclick="askAI('What is my riskiest stock?')">What's riskiest?</span>
+        <span class="chip" onclick="askAI('Am I beating SPY?')">Am I beating SPY?</span>
+        <span class="chip" onclick="askAI('Summarize my portfolio')">Summarize</span>
+        <span class="chip" onclick="askAI('Sector exposure')">Sector exposure</span>
+        <span class="chip" onclick="askAI('What is my correlation?')">Correlation</span>
+        <span class="chip" onclick="askAI('How many holdings?')">How many?</span>
+        <span class="chip" onclick="askAI('Performance')">Performance</span>
       </div>
-
-      <div class="card p-4">
-        <h2 class="text-[11px] font-semibold tracking-widest uppercase mb-2" style="color:var(--text2)">Trade History</h2>
-        <div id="paperHistoryList" class="space-y-1 max-h-[300px] overflow-y-auto text-[11px]">
-          <div class="text-[11px] py-3 text-center" style="color:var(--text3)">No trades yet</div>
-        </div>
+      <div style="display:flex;gap:6px">
+        <input id="ai-input" class="input" placeholder="Ask about portfolio..." style="margin:0" onkeydown="if(event.key==='Enter') askAI(this.value)" />
+        <button class="btn btn-sm" onclick="askAI(document.getElementById('ai-input').value)">Send</button>
       </div>
     </div>
 
-    <!-- Right: Quant Model Integration -->
-    <div class="col-span-12 lg:col-span-7 space-y-3">
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-[11px] font-semibold tracking-widest uppercase" style="color:var(--text2)">Quant Model Integration</h2>
-          <div class="flex gap-1.5">
-            <button id="quantInfoBtn" class="h-6 px-2.5 rounded-[6px] text-[10px]" style="background:var(--card2);border:1px solid var(--border);">Info</button>
-            <button id="quantRunBtn" class="h-7 px-3 rounded-[8px] bg-[#0a0a0a] text-white text-[11px] font-medium">▶ Run Model</button>
-          </div>
-        </div>
-        
-        <div class="p-3 rounded-[12px] mb-3 text-[11px]" style="background:var(--card2);border:1px solid var(--border);">
-          <div class="font-medium text-[11px] mb-1">How to integrate your quant files:</div>
-          <div class="text-[10px] leading-[1.5]" style="color:var(--text2)">
-            1. Your file <span class="mono px-1 py-0.5 rounded bg-black text-white text-[9px]">quant_model.py</span> is already in the repo — edit it with your model<br>
-            2. Implement <span class="mono">get_universe() -> [tickers]</span> and <span class="mono">generate_signals(price_data, positions, cash)</span><br>
-            3. Click "Run Model" — it pulls live prices, runs your code server-side, and returns BUY/SELL signals<br>
-            4. Signals appear below — click to execute as paper trades, or enable auto-execute<br>
-            <span class="text-[9px]">See <span class="mono">quant_model.py</span> comments for how to import your existing files.</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 mb-3">
-          <div>
-            <label class="text-[10px] font-medium" style="color:var(--text2)">Universe</label>
-            <div id="quantUniverse" class="mt-1 p-2 rounded-[8px] text-[10px] mono max-h-[60px] overflow-y-auto" style="background:var(--card2);border:1px solid var(--border);">Loading...</div>
-          </div>
-          <div>
-            <label class="text-[10px] font-medium" style="color:var(--text2)">Model Info</label>
-            <div id="quantInfo" class="mt-1 p-2 rounded-[8px] text-[10px] max-h-[60px] overflow-y-auto" style="background:var(--card2);border:1px solid var(--border);">Loading...</div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 mb-2">
-          <label class="flex items-center gap-1.5 text-[11px]"><input type="checkbox" id="autoExecuteCheck"> Auto-execute signals</label>
-          <span class="text-[10px]" style="color:var(--text3)">(executes top 5 as paper trades)</span>
-        </div>
-
-        <div id="quantSignals" class="space-y-2 min-h-[100px] p-3 rounded-[12px]" style="background:var(--card2);border:1px dashed var(--border2);">
-          <div class="text-[11px] text-center py-4" style="color:var(--text3)">Click "Run Model" to generate signals from your quant_model.py<br><span class="text-[10px]">Your model will analyze live prices and your paper positions</span></div>
-        </div>
-
-        <div id="quantRunStatus" class="text-[10px] mt-2" style="color:var(--text2)"></div>
-      </div>
-
-      <div class="card p-4">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-[11px] font-semibold tracking-widest uppercase" style="color:var(--text2)">Backtest / Performance</h2>
-          <div class="flex gap-1.5">
-            <select id="backtestSymbol" class="h-7 px-2 rounded-[8px] text-[11px]" style="background:var(--card2);border:1px solid var(--border);">
-              <option value="SPY">SPY</option>
-              <option value="QQQ">QQQ</option>
-              <option value="AAPL">AAPL</option>
-              <option value="MSFT">MSFT</option>
-              <option value="NVDA">NVDA</option>
-            </select>
-            <button id="backtestBtn" class="h-7 px-3 rounded-[8px] text-[11px]" style="background:var(--card);border:1px solid var(--border);">Run Backtest</button>
-          </div>
-        </div>
-        <canvas id="paperChart" height="200" class="w-full"></canvas>
-        <div id="backtestStats" class="mt-3 grid grid-cols-3 gap-2 text-[11px]"></div>
-      </div>
-
-      <div class="card p-4">
-        <h2 class="text-[11px] font-semibold tracking-widest uppercase mb-2" style="color:var(--text2)">Code — quant_model.py</h2>
-        <div class="text-[10px] mb-2" style="color:var(--text2)">Edit this file locally to plug in your quant logic. Template is in repo.</div>
-        <pre id="quantCodePreview" class="p-3 rounded-[10px] text-[10px] mono overflow-x-auto max-h-[200px] overflow-y-auto" style="background:#0a0a0a;color:#e5e5e5;">Loading quant_model.py...</pre>
-      </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Yahoo News — Real, Related to Holdings</h3>
+      <div id="news-list"><div style="font-size:12px;color:var(--muted)">Add holdings to load news from Yahoo Finance via yfinance. Click opens yahoo.com.</div></div>
     </div>
   </div>
 </div>
 
-
-<div id="aboutModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4" style="background:rgba(0,0,0,.5);backdrop-filter:blur(16px);">
-  <div class="card w-full max-w-[560px]"><div class="p-5 border-b flex justify-between" style="border-color:var(--border);"><h2 class="font-semibold">tickr v13 — conversational</h2><button id="closeAbout" class="w-7 h-7 rounded-full hover:bg-black/10">✕</button></div><div class="p-5 text-[12px] space-y-2"><p><b>v13 — fixed Unknown 100% + conversational AI</b></p><p>Fixed bug where portfolio showed Unknown at 100% when prices were still loading — now server enriches sector data itself.</p><p>AI now handles open-ended conversation: greetings, market chat, and diversification. Try "find new stocks to diversify" — it will analyze your current sectors and suggest specific tickers you are light on (healthcare, utilities, staples, etc.) with reasoning.</p><p>No slang, no preset-only inputs.</p></div><div class="p-4 border-t flex justify-end" style="border-color:var(--border);"><button id="closeAbout2" class="h-8 px-4 rounded-[10px] bg-black text-white text-[11px]">Close</button></div></div>
+<div id="quant-view" class="layout" style="display:none">
+  <div class="card placeholder" style="grid-column:1/-1">
+    <h2>Quant Lab — Coming Next Update</h2>
+    <p>Toggle to Portfolio for now. Quant will have: alpha leaderboard, signals, backtest, factor exposure, all isolated so it can't break Portfolio.</p>
+    <p style="margin-top:10px;font-size:12px">Currently: portfolio mode is fully functional with real yfinance data.</p>
+  </div>
 </div>
 
-<div id="aiPanel" class="fixed bottom-4 right-4 z-[65] w-[360px] h-[480px] card overflow-hidden hidden flex flex-col shadow-2xl"><div class="h-[52px] px-4 flex items-center justify-between border-b" style="border-color:var(--border);background:var(--card2);"><div class="font-semibold text-[12px]">tickr ai v11 — actually fun now</div><button id="aiClose" class="w-6 h-6 rounded-[8px] hover:bg-black/5">✕</button></div><div id="aiMessages" class="flex-1 overflow-y-auto p-3 space-y-2.5"><div class="chat-bubble chat-ai text-[11px]">Hi — I'm Tickr AI.
+<div id="paper-view" class="layout" style="display:none">
+  <div class="card placeholder" style="grid-column:1/-1">
+    <h2>Paper Trading — Placeholder</h2>
+    <p>This will be $100k virtual with Quant signals executing here. For now use Portfolio mode to track real holdings. No trades here yet — coming in v15.</p>
+  </div>
+</div>
 
-You can talk to me naturally — not just preset commands.
+<script>
+let positions = JSON.parse(localStorage.getItem('tickr_positions_v14')||'{}');
+let watchlist = JSON.parse(localStorage.getItem('tickr_watchlist_v14')||'[]');
+let currentPeriod = '1mo';
+let livePrices = {};
+let chart = null;
+let themes = ['dark','light','forest','cyber','midnight','paper'];
+let themeIdx = 0;
 
-Try:
-• "What's up?"
-• "Find new stocks to diversify my portfolio"
-• "How much tech do I have?"
-• "Show my dividend stocks"
-• "What do you think about MSFT?"
-• "How's the market today?"
+function save(){
+  localStorage.setItem('tickr_positions_v14', JSON.stringify(positions));
+  localStorage.setItem('tickr_watchlist_v14', JSON.stringify(watchlist));
+}
 
-I can see your real holdings and live prices, so I can talk about your actual allocation and suggest specific ideas to balance it out. What would you like to discuss?</div></div><div class="p-2.5 border-t flex gap-2" style="border-color:var(--border);"><input id="aiInput" placeholder="delete AAPL, edit AAPL to 10..." class="flex-1 h-8 px-3 rounded-[10px] text-[12px]" style="background:var(--card2);border:1px solid var(--border);"><button id="aiSend" class="w-8 h-8 rounded-[10px] bg-black text-white">↗</button></div></div>
+function cycleTheme(){
+  themeIdx = (themeIdx+1)%themes.length;
+  document.body.setAttribute('data-theme', themes[themeIdx]);
+}
 
-<div id="authModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4" style="background:rgba(0,0,0,.45);backdrop-filter:blur(12px);"><div class="card w-full max-w-[360px] p-5"><div class="font-semibold text-[13px]">Welcome to tickr v10.1</div><div class="mt-3 space-y-2"><input id="authUser" placeholder="username" class="w-full h-9 px-3 rounded-[10px] text-[12px]" style="background:var(--card2);border:1px solid var(--border);"><input id="authPass" type="password" placeholder="password" class="w-full h-9 px-3 rounded-[10px] text-[12px]" style="background:var(--card2);border:1px solid var(--border);"><button id="authSubmit" class="w-full h-9 rounded-[10px] bg-black text-white text-[12px]">Continue</button><button id="authDemo" class="w-full h-7 text-[10px] rounded-[8px]" style="background:var(--card2);">Demo without login</button><div id="authErr" class="hidden text-[10px] p-2 rounded-[8px] bg-red-50 text-red-700"></div></div></div></div>
+function switchMode(m){
+  document.getElementById('portfolio-view').style.display = m==='portfolio'?'grid':'none';
+  document.getElementById('quant-view').style.display = m==='quant'?'grid':'none';
+  document.getElementById('paper-view').style.display = m==='paper'?'grid':'none';
+  document.getElementById('btn-portfolio').classList.toggle('active', m==='portfolio');
+  document.getElementById('btn-quant').classList.toggle('active', m==='quant');
+  document.getElementById('btn-paper').classList.toggle('active', m==='paper');
+  if(m==='portfolio') refreshAll();
+}
 
-<script type="module">
-const $=s=>document.querySelector(s); const $$=s=>document.querySelectorAll(s);
-let state={token:localStorage.getItem('flow_token')||'',username:localStorage.getItem('flow_user')||'',holdings:[],watchlist:[],currentSymbol:'SPY',quotesCache:{},selectedIdx:0,groupMode:'sector',editingIdx:null};
+function addPosition(){
+  const t = document.getElementById('ticker-input').value.trim().toUpperCase();
+  const s = parseFloat(document.getElementById('shares-input').value);
+  const c = parseFloat(document.getElementById('cost-input').value);
+  if(!t || !s || s<=0){ alert('Enter ticker and shares'); return; }
+  positions[t] = {shares: (positions[t]?.shares||0)+s, avgCost: c||positions[t]?.avgCost||0};
+  save();
+  document.getElementById('ticker-input').value=''; document.getElementById('shares-input').value=''; document.getElementById('cost-input').value='';
+  refreshAll();
+}
+function removePosition(t){ delete positions[t]; save(); refreshAll(); }
+function editPosition(t){
+  const ns = prompt(`Edit shares for ${t}`, positions[t].shares);
+  if(ns===null) return;
+  const n = parseFloat(ns);
+  if(isNaN(n)||n<0) return;
+  if(n===0) delete positions[t]; else positions[t].shares=n;
+  save(); refreshAll();
+}
 
-function renderAuth(){const area=$('#authArea');if(state.token){area.innerHTML=`<span class="text-[11px] mono" style="color:var(--text2)">${state.username||'user'}</span><button id="logoutBtn" class="h-7 px-2 rounded-[8px] text-[10px]" style="border:1px solid var(--border)">Logout</button>`;$('#logoutBtn').onclick=()=>{localStorage.removeItem('flow_token');state.token='';renderAuth();showAuth();};}else{area.innerHTML=`<button id="loginBtn" class="h-7 px-2.5 rounded-[8px] bg-black text-white text-[10px]">Sign in</button>`;$('#loginBtn').onclick=showAuth;}}
-function showAuth(){document.getElementById('authModal').classList.remove('hidden');document.getElementById('authModal').classList.add('flex');}
-function hideAuth(){document.getElementById('authModal').classList.add('hidden');document.getElementById('authModal').classList.remove('flex');}
-$('#authDemo')?.addEventListener('click',()=>{hideAuth();loadDemo();});
-$('#authSubmit')?.addEventListener('click',async()=>{const u=$('#authUser').value.trim().toLowerCase();const p=$('#authPass').value;if(!u||!p){const e=$('#authErr');e.textContent='Enter username/password';e.classList.remove('hidden');return;}try{let res=await fetch('/api/auth',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p})});const j=await res.json();if(!res.ok) throw new Error(j.error);state.token=j.token;state.username=j.username||u;localStorage.setItem('flow_token',state.token);localStorage.setItem('flow_user',state.username);hideAuth();renderAuth();await 
-// ===== PAPER TRADING / QUANT LAB JS =====
-let paperState = {cash: 100000, equity: 100000, positions: {}, trades: [], loaded: false};
+function addWatch(){
+  const t = document.getElementById('watch-input').value.trim().toUpperCase();
+  if(!t) return;
+  if(!watchlist.includes(t)) watchlist.push(t);
+  save(); document.getElementById('watch-input').value=''; refreshAll();
+}
+function removeWatch(t){ watchlist = watchlist.filter(x=>x!==t); save(); refreshAll(); }
 
-async function loadPaperPortfolio(){
+async function fetchLive(){
+  const tickers = [...Object.keys(positions), ...watchlist];
+  if(tickers.length===0){ livePrices={}; return; }
+  const uniq = [...new Set(tickers)];
   try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/portfolio', {headers: token ? {'X-Auth-Token': token} : {}});
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    paperState = j;
-    renderPaperPortfolio(j);
-    document.getElementById('paperStatus').textContent = `Live — ${Object.keys(j.positions).length} positions`;
-  }catch(e){
-    console.log('paper load error', e);
-    document.getElementById('paperStatus').textContent = 'Error loading: ' + e.message;
-  }
+    const res = await fetch(`/api/price/live?tickers=${uniq.join(',')}`);
+    const data = await res.json();
+    livePrices = data;
+  }catch(e){ console.error(e); }
 }
 
-function renderPaperPortfolio(data){
-  const cash = data.cash || 0;
-  const equity = data.equity || cash;
-  const pnl = equity - 100000;
-  const pnlPct = (pnl / 100000 * 100);
-  
-  document.getElementById('paperCash').textContent = '$' + cash.toLocaleString(undefined, {maximumFractionDigits:0});
-  document.getElementById('paperEquity').textContent = '$' + equity.toLocaleString(undefined, {maximumFractionDigits:0});
-  const pnlEl = document.getElementById('paperPnL');
-  pnlEl.textContent = (pnl>=0?'+':'') + '$' + pnl.toFixed(0) + ' (' + (pnlPct>=0?'+':'') + pnlPct.toFixed(2) + '%)';
-  pnlEl.style.color = pnl>=0 ? 'var(--green)' : 'var(--red)';
-  
-  document.getElementById('paperPositionsCount').textContent = Object.keys(data.positions||{}).length;
-  document.getElementById('paperTradesCount').textContent = (data.total_trades||data.trades?.length||0) + ' trades';
-  
-  // Positions list
-  const posList = document.getElementById('paperPositionsList');
-  const positions = data.positions || {};
-  if(Object.keys(positions).length === 0){
-    posList.innerHTML = '<div class="text-[11px] py-6 text-center" style="color:var(--text3)">No positions yet — run your quant model or place a manual trade</div>';
-  } else {
-    posList.innerHTML = Object.entries(positions).map(([sym, pos]) => {
-      const pnlColor = pos.pnl >=0 ? 'var(--green)' : 'var(--red)';
-      return `<div class="flex items-center justify-between p-2.5 rounded-[10px] hover:bg-black/[0.03] border" style="border-color:var(--border)">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-[8px] bg-black text-white flex items-center justify-center text-[10px] font-medium">${sym.slice(0,4)}</div>
-          <div>
-            <div class="font-medium text-[11px]">${sym} • ${pos.quantity} shares</div>
-            <div class="mono text-[10px]" style="color:var(--text2)">Avg $${pos.avgCost.toFixed(2)} → $${pos.currentPrice.toFixed(2)}</div>
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="mono text-[11px] font-medium">$${pos.marketValue.toFixed(0)}</div>
-          <div class="mono text-[10px]" style="color:${pnlColor}">${pos.pnl>=0?'+':''}${pos.pnl.toFixed(0)} (${pos.pnlPct>=0?'+':''}${pos.pnlPct.toFixed(1)}%)</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-  
-  // Trade history
-  const histEl = document.getElementById('paperHistoryList');
-  const trades = (data.trades || []).slice().reverse();
-  if(trades.length === 0){
-    histEl.innerHTML = '<div class="text-[11px] py-3 text-center" style="color:var(--text3)">No trades yet</div>';
-  } else {
-    histEl.innerHTML = trades.slice(0,30).map(t => {
-      const isBuy = t.action === 'BUY';
-      return `<div class="flex items-center justify-between p-2 rounded-[8px] hover:bg-black/[0.02]">
-        <div class="flex items-center gap-2">
-          <span class="text-[8px] px-1.5 py-0.5 rounded-[4px] font-medium ${isBuy ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${t.action}</span>
-          <span class="font-medium text-[11px]">${t.symbol}</span>
-          <span class="mono text-[10px]" style="color:var(--text2)">${t.quantity} @ $${t.price.toFixed(2)}</span>
-        </div>
-        <div class="text-right">
-          <div class="mono text-[10px]" style="color:var(--text2)">${new Date(t.timestamp).toLocaleTimeString()}</div>
-          <div class="text-[9px] truncate max-w-[120px]" style="color:var(--text3)">${t.reason||''}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
-}
-
-async function loadQuantInfo(){
+async function fetchNews(){
+  const tickers = Object.keys(positions);
+  if(tickers.length===0){ document.getElementById('news-list').innerHTML='<div style="font-size:12px;color:var(--muted)">Add holdings to load news</div>'; return; }
   try{
-    const r = await fetch('/api/quant/info');
-    const j = await r.json();
-    const info = j.info || {};
-    document.getElementById('quantModelName').textContent = info.name || 'Custom Model';
-    document.getElementById('quantModelStatus').textContent = j.has_model ? 'quant_model.py found ✓' : 'No file yet';
-    document.getElementById('quantUniverse').textContent = (j.universe||[]).join(', ') || 'AAPL, MSFT, SPY...';
-    document.getElementById('quantInfo').textContent = info.description || JSON.stringify(info.params||{}, null, 2) || 'Template model — replace with your logic';
-    
-    // Try to load code preview if available
-    try{
-      const codeR = await fetch('/quant_model.py');
-      if(codeR.ok){
-        const code = await codeR.text();
-        document.getElementById('quantCodePreview').textContent = code.slice(0, 3000);
-      }
-    }catch{}
-  }catch(e){
-    console.log('quant info error', e);
-  }
+    const res = await fetch(`/api/news?tickers=${tickers.slice(0,6).join(',')}`);
+    const data = await res.json();
+    const list = document.getElementById('news-list');
+    if(!data.news || data.news.length===0){ list.innerHTML='<div style="font-size:12px;color:var(--muted)">No news found (yfinance limit)</div>'; return; }
+    list.innerHTML = data.news.map(n=>`
+      <div class="news-item" onclick="window.open('${n.link}','_blank')">
+        <a>${n.title}</a>
+        <div class="meta">${n.ticker} • ${n.publisher} • ${n.time} • yfinance</div>
+      </div>
+    `).join('');
+  }catch(e){ console.error(e); }
 }
 
-async function runQuantModel(){
-  const btn = document.getElementById('quantRunBtn');
-  const statusEl = document.getElementById('quantRunStatus');
-  const signalsEl = document.getElementById('quantSignals');
-  const autoExec = document.getElementById('autoExecuteCheck')?.checked || false;
-  
-  btn.textContent = 'Running...';
-  btn.disabled = true;
-  statusEl.textContent = 'Fetching live prices for universe and running your quant_model.py...';
-  signalsEl.innerHTML = '<div class="text-[11px] text-center py-4" style="color:var(--text2)">Running model...</div>';
-  
+async function fetchChart(){
+  const tickers = Object.keys(positions);
+  if(tickers.length===0){
+    if(chart){ chart.destroy(); chart=null; }
+    document.getElementById('m-total').textContent='$0';
+    return;
+  }
+  const shares = tickers.map(t=>positions[t].shares);
   try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/run_quant', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({auto_execute: autoExec})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    
-    const signals = j.signals || [];
-    statusEl.textContent = `Generated ${signals.length} signals from ${j.price_data_count} symbols. ${autoExec ? `Executed ${j.executed?.length||0} as paper trades.` : ''}`;
-    
-    if(signals.length === 0){
-      signalsEl.innerHTML = '<div class="text-[11px] text-center py-6" style="color:var(--text3)">No signals right now — your model is flat.<br><span class="text-[10px]">This means your conditions didn\'t trigger. Try adjusting thresholds in quant_model.py or expand universe.</span></div>';
-    } else {
-      signalsEl.innerHTML = signals.map(s => {
-        const isBuy = s.action === 'BUY';
-        return `<div class="flex items-center justify-between p-3 rounded-[12px] bg-white border" style="border-color:var(--border);">
-          <div class="flex items-center gap-2.5">
-            <span class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] ${isBuy?'bg-green-500 text-white':'bg-red-500 text-white'}">${isBuy?'↗':'↘'}</span>
-            <div>
-              <div class="flex items-center gap-2"><span class="font-semibold text-[12px]">${s.symbol}</span><span class="text-[10px] px-1.5 py-0.5 rounded-full ${isBuy?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${s.action} ${s.quantity}</span><span class="text-[9px] px-1.5 py-0.5 rounded-full bg-black text-white">${Math.round((s.confidence||0.5)*100)}% conf</span></div>
-              <div class="text-[10px] mt-0.5" style="color:var(--text2)">${s.reason||'Quant signal'}</div>
-            </div>
-          </div>
-          <div class="flex gap-1">
-            <button class="paper-exec-signal h-7 px-3 rounded-[8px] bg-[#0a0a0a] text-white text-[10px]" data-symbol="${s.symbol}" data-action="${s.action}" data-qty="${s.quantity}" data-reason="${(s.reason||'').replace(/"/g, '&quot;')}">Execute</button>
-          </div>
-        </div>`;
-      }).join('');
-      
-      // Add click handlers for execute buttons
-      signalsEl.querySelectorAll('.paper-exec-signal').forEach(btn => {
-        btn.onclick = async () => {
-          const sym = btn.dataset.symbol;
-          const action = btn.dataset.action;
-          const qty = btn.dataset.qty;
-          const reason = btn.dataset.reason;
-          await executePaperTrade(sym, qty, action, reason);
-        };
-      });
-    }
-    
-    if(autoExec){
-      await loadPaperPortfolio();
-    }
-    
-  }catch(e){
-    console.error(e);
-    statusEl.textContent = 'Error: ' + e.message;
-    signalsEl.innerHTML = `<div class="p-3 rounded-[10px] bg-red-50 text-red-700 text-[11px]">Error running model: ${e.message}<br><br>Make sure quant_model.py exists and has generate_signals() function. Check server logs.</div>`;
-  }finally{
-    btn.textContent = '▶ Run Model';
-    btn.disabled = false;
-  }
+    const res = await fetch(`/api/price/history?tickers=${tickers.join(',')}&shares=${shares.join(',')}&period=${currentPeriod}`);
+    const data = await res.json();
+    if(data.error){ console.error(data.error); return; }
+    renderChart(data);
+    // metrics
+    const total = data.equity[data.equity.length-1]||0;
+    const start = data.equity[0]||0;
+    const dayGain = 0; // calculated from live prices separately
+    document.getElementById('m-total').textContent = `$${total.toLocaleString(undefined,{maximumFractionDigits:2})}`;
+  }catch(e){ console.error(e); }
 }
 
-async function executePaperTrade(symbol, quantity, action, reason){
-  const statusEl = document.getElementById('paperTradeStatus');
-  try{
-    statusEl.textContent = `Executing ${action} ${quantity} ${symbol}...`;
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/trade', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({symbol, quantity: parseFloat(quantity), action, reason: reason||'Manual paper trade'})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    statusEl.textContent = `✓ ${action} ${quantity} ${symbol} executed`;
-    await loadPaperPortfolio();
-  }catch(e){
-    statusEl.textContent = 'Error: ' + e.message;
-  }
-}
-
-async function runBacktest(){
-  const btn = document.getElementById('backtestBtn');
-  const sym = document.getElementById('backtestSymbol').value;
-  btn.textContent = 'Running...';
-  try{
-    const r = await fetch('/api/paper/backtest', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({symbol: sym, period: '1y'})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    
-    const statsEl = document.getElementById('backtestStats');
-    if(j.return_pct !== undefined){
-      statsEl.innerHTML = `
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Final Equity</div><div class="mono font-medium">$${j.final.toFixed(0)}</div></div>
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Return</div><div class="mono font-medium" style="color:${j.return_pct>=0?'var(--green)':'var(--red)'}">${j.return_pct>=0?'+':''}${j.return_pct.toFixed(1)}%</div></div>
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Trades</div><div class="mono font-medium">${j.trades?.length||0}</div></div>
-      `;
-    } else {
-      statsEl.innerHTML = `<div class="text-[10px] p-2" style="color:var(--text2)">${j.note||''}<br>Buy & Hold: ${j.buy_hold_return?.toFixed(1)}%</div>`;
-    }
-    
-    // Draw equity curve if available
-    if(j.equity_curve){
-      drawPaperChart(j.equity_curve);
-    }
-  }catch(e){
-    console.error(e);
-    document.getElementById('backtestStats').innerHTML = `<div class="text-[10px] p-2 bg-red-50 text-red-700 rounded">Error: ${e.message}</div>`;
-  }finally{
-    btn.textContent = 'Run Backtest';
-  }
-}
-
-function drawPaperChart(equityData){
-  const canvas = document.getElementById('paperChart');
-  if(!canvas || !equityData || equityData.length===0) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio||1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-  const W = rect.width, H = rect.height;
-  ctx.clearRect(0,0,W,H);
-  
-  const equities = equityData.map(d=>d.equity);
-  const min = Math.min(...equities);
-  const max = Math.max(...equities);
-  const pad = (max-min)*0.1 || 1;
-  const yMin = min-pad, yMax = max+pad;
-  
-  // Grid
-  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-  ctx.lineWidth = 1;
-  for(let i=0;i<4;i++){
-    const y = (i/3)*H;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
-  }
-  
-  // Line
-  ctx.beginPath();
-  equities.forEach((eq, i) => {
-    const x = (i/(equities.length-1))*W;
-    const y = 10 + (1 - (eq - yMin)/(yMax - yMin)) * (H-30);
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+function renderChart(data){
+  const ctx = document.getElementById('portfolioChart').getContext('2d');
+  if(chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: data.dates,
+      datasets:[
+        {label:'Portfolio (yfinance)', data:data.equity, borderColor:'#6d5cff', backgroundColor:'rgba(109,92,255,0.1)', tension:0.2, fill:true, pointRadius:0},
+        ...(data.spy ? [{label:'SPY normalized', data:data.spy, borderColor:'#22c55e', borderDash:[5,5], tension:0.2, fill:false, pointRadius:0}] : [])
+      ]
+    },
+    options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{x:{display:false}, y:{grid:{color:'rgba(255,255,255,0.05)'}}}, plugins:{legend:{labels:{color:'var(--muted)', boxWidth:12}}}}
   });
-  const isUp = equities[equities.length-1] >= equities[0];
-  ctx.strokeStyle = isUp ? '#16a34a' : '#dc2626';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Fill
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fillStyle = isUp ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)';
-  ctx.fill();
 }
 
-// Toggle between portfolio and paper trading
-function showPaperTrading(){
-  document.querySelector('main').classList.add('hidden');
-  document.getElementById('paperTradingSection').classList.remove('hidden');
-  loadPaperPortfolio();
-  loadQuantInfo();
+function setPeriod(p){
+  currentPeriod=p;
+  document.querySelectorAll('.periods button').forEach(b=>b.classList.toggle('active', b.textContent.toLowerCase()===p.toLowerCase() || (p==='1mo' && b.textContent==='1M') || (p==='max' && b.textContent==='ALL')));
+  fetchChart();
 }
 
-function showMainPortfolio(){
-  document.querySelector('main').classList.remove('hidden');
-  document.getElementById('paperTradingSection').classList.add('hidden');
-}
-
-// Event listeners
-document.getElementById('paperBtn')?.addEventListener('click', showPaperTrading);
-document.getElementById('paperBackBtn')?.addEventListener('click', showMainPortfolio);
-
-document.getElementById('paperTradeBtn')?.addEventListener('click', async () => {
-  const sym = document.getElementById('paperSymbol').value.trim().toUpperCase();
-  const qty = document.getElementById('paperQty').value;
-  const action = document.getElementById('paperAction').value;
-  if(!sym || !qty) return;
-  await executePaperTrade(sym, qty, action, 'Manual paper trade');
-  document.getElementById('paperSymbol').value = '';
-  document.getElementById('paperQty').value = '';
-});
-
-document.getElementById('paperQuoteBtn')?.addEventListener('click', async () => {
-  const sym = document.getElementById('paperSymbol').value.trim().toUpperCase();
-  if(!sym) return;
-  try{
-    const r = await fetch('/api/quote/'+sym);
-    const j = await r.json();
-    document.getElementById('paperTradeStatus').textContent = `${sym} $${j.price.toFixed(2)} ${j.changePct>=0?'+':''}${j.changePct.toFixed(2)}% — ${j.sector}`;
-  }catch(e){
-    document.getElementById('paperTradeStatus').textContent = 'Quote error: ' + e.message;
+async function refreshAll(){
+  await fetchLive();
+  // holdings list
+  const hl = document.getElementById('holdings-list');
+  const tickers = Object.keys(positions);
+  if(tickers.length===0){ hl.innerHTML='<div style="font-size:12px;color:var(--muted)">No positions — add shares left</div>'; }
+  else{
+    // compute metrics from live
+    let total=0, day=0, pnl=0;
+    const rows = tickers.map(t=>{
+      const pos = positions[t];
+      const lp = livePrices[t]||{price:0, change:0, change_percent:0};
+      const val = pos.shares * (lp.price||0);
+      const cost = pos.shares * (pos.avgCost||lp.price||0);
+      const thisPnl = val - cost;
+      total+=val; day+=pos.shares*(lp.change||0); pnl+=thisPnl;
+      return {t, pos, lp, val, pnl:thisPnl};
+    }).sort((a,b)=>b.val-a.val);
+    hl.innerHTML = rows.map(r=>`
+      <div class="holding">
+        <div><b>${r.t}</b> ${r.pos.shares} sh<br><span style="font-size:11px;color:var(--muted)">$${(r.lp.price||0).toFixed(2)} <span class="${(r.lp.change||0)>=0?'green':'red'}">${(r.lp.change_percent||0).toFixed(2)}%</span></span></div>
+        <div style="text-align:right"><div style="font-size:13px">$${r.val.toFixed(2)}</div><div style="font-size:11px" class="${r.pnl>=0?'green':'red'}">${r.pnl>=0?'+':''}$${r.pnl.toFixed(2)}</div><div style="margin-top:4px"><button class="btn btn-sm" onclick="editPosition('${r.t}')">Edit</button> <button class="btn btn-sm" style="background:var(--red)" onclick="removePosition('${r.t}')">X</button></div></div>
+      </div>
+    `).join('');
+    document.getElementById('stat-total').textContent = `$${total.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+    document.getElementById('stat-day').textContent = `${day>=0?'+':''}$${day.toFixed(2)}`;
+    document.getElementById('m-total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('m-day').textContent = `${day>=0?'+':''}$${day.toFixed(2)}`;
+    document.getElementById('m-pnl').textContent = `${pnl>=0?'+':''}$${pnl.toFixed(2)}`;
+    document.getElementById('m-count').textContent = tickers.length;
+    document.getElementById('m-best').textContent = rows[0]?.t||'—';
+    // diversification
+    const tech = rows.filter(r=>['AAPL','MSFT','NVDA','GOOGL','META'].includes(r.t)).length;
+    const divScore = Math.max(0, 100 - Math.round(tech/rows.length*100));
+    document.getElementById('m-div').textContent = `${divScore}/100`;
+    document.getElementById('insights').textContent = rows.length>0 ? `Largest: ${rows[0].t} ${((rows[0].val/total)*100).toFixed(1)}% of portfolio. ${tech/rows.length>0.6?'High Tech concentration — consider adding JNJ, JPM, XLE.':''}` : '';
   }
-});
-
-document.getElementById('quantRunBtn')?.addEventListener('click', runQuantModel);
-document.getElementById('quantInfoBtn')?.addEventListener('click', loadQuantInfo);
-document.getElementById('refreshPaperBtn')?.addEventListener('click', loadPaperPortfolio);
-document.getElementById('backtestBtn')?.addEventListener('click', runBacktest);
-
-document.getElementById('paperResetBtn')?.addEventListener('click', async () => {
-  if(!confirm('Reset paper portfolio to $100k? This will delete all paper positions and trades.')) return;
-  try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/reset', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    await loadPaperPortfolio();
-  }catch(e){
-    alert('Reset error: ' + e.message);
-  }
-});
-
-// Quick buttons for paper trading
-document.querySelectorAll('.ai-quick').forEach(btn => {
-  if(btn.textContent.includes('diversify')){
-    btn.addEventListener('click', () => {
-      showPaperTrading();
-    });
-  }
-});
-
-
-loadPortfolio();}catch(e){const el=$('#authErr');el.textContent=e.message;el.classList.remove('hidden');}});
-renderAuth(); if(!state.token) showAuth();
-
-async function apiQuote(sym){sym=sym.toUpperCase();if(state.quotesCache[sym]&&Date.now()-state.quotesCache[sym]._ts<60000) return state.quotesCache[sym];try{const r=await fetch('/api/quote/'+sym);if(!r.ok) return null;const j=await r.json();if(!j||!j.price) return null;j._ts=Date.now();state.quotesCache[sym]=j;return j;}catch{return null;}}
-async function apiQuotes(syms){const uniq=[...new Set(syms.map(s=>s.toUpperCase()))].slice(0,20);if(!uniq.length) return {};try{const r=await fetch('/api/quotes?symbols='+uniq.join(','));if(r.ok){const j=await r.json();Object.entries(j).forEach(([k,v])=>{if(v&&v.price){v._ts=Date.now();state.quotesCache[k]=v;}});return j;}}catch{}const out={};for(const s of uniq){const q=await apiQuote(s);if(q) out[s]=q;}return out;}
-
-async function loadPortfolio(){
-  if(!state.token){ await loadDemo(); return; }
-  try{
-    const r=await fetch('/api/portfolio',{headers:{'X-Auth-Token':state.token}});
-    if(!r.ok) throw 0;
-    const j=await r.json();
-    state.holdings=j.holdings||[];
-    state.watchlist=j.watchlist||[];
-    const allSyms=[...new Set([...state.holdings.map(h=>h.symbol),...state.watchlist])];
-    if(allSyms.length){ console.log('Auto-loading', allSyms); await apiQuotes(allSyms); }
-    renderHoldings(); renderWatchlist(); updateAllocation(); renderDividendBox(); renderEarnings(); loadNews();
-    if(state.holdings.length) loadChart(state.holdings[0].symbol);
-  }catch(e){ console.log('loadPortfolio fail', e); await loadDemo(); }
-}
-async function loadDemo(){
-  state.holdings=[{symbol:'AAPL',quantity:10,avgCost:175},{symbol:'MSFT',quantity:5,avgCost:380},{symbol:'JNJ',quantity:8,avgCost:160},{symbol:'NEE',quantity:12,avgCost:70}];
-  state.watchlist=['SPY','QQQ','XLU','VYM','SCHD'];
-  const allSyms=[...new Set([...state.holdings.map(h=>h.symbol),...state.watchlist])];
-  await apiQuotes(allSyms);
-  renderHoldings(); renderWatchlist(); updateAllocation(); renderDividendBox(); renderEarnings(); loadNews(); loadChart('SPY');
-}
-async function savePortfolio(){if(!state.token){localStorage.setItem('tickr_demo',JSON.stringify(state.holdings));return;}try{await fetch('/api/portfolio',{method:'POST',headers:{'Content-Type':'application/json','X-Auth-Token':state.token},body:JSON.stringify({holdings:state.holdings,watchlist:state.watchlist,token:state.token})});}catch(e){console.log('save fail',e);}}
-
-function getSector(q){ if(!q) return 'Unknown'; return q.sector||q.industry||'Unknown'; }
-function getType(q){
-  if(!q) return 'Unknown';
-  const qt=(q.quoteType||'').toUpperCase();
-  if(qt==='ETF') return 'ETF';
-  if(qt==='MUTUALFUND') return 'Mutual Fund';
-  if(q.sector && q.sector!=='Unknown') return q.sector;
-  return q.industry||'Stock';
-}
-function sectorColor(sec){ const m={'Technology':'#0ea5e9','Healthcare':'#10b981','Financial Services':'#f59e0b','Utilities':'#eab308','Energy':'#ef4444','ETF':'#0a0a0a','Stock':'#0a0a0a','Unknown':'#a3a3a3'}; return m[sec]||'#78716c'; }
-
-function renderHoldings(){
-  const el=document.getElementById('holdingsList');
-  if(!state.holdings.length){el.innerHTML='<div class="text-[11px] py-6 text-center" style="color:var(--text3)">No holdings</div>';return;}
-  const enriched=state.holdings.map((h,i)=>{
-    const q=state.quotesCache[h.symbol.toUpperCase()];
-    const cur=q?.price; const hasReal=cur!=null;
-    const qty=Number(h.quantity||0); const avg=Number(h.avgCost||0);
-    const gain=hasReal?(cur-avg)*qty:null; const pct=hasReal&&avg?((cur-avg)/avg*100):null;
-    const sector=getSector(q); const type=getType(q); const val=hasReal? qty*cur : qty*avg;
-    return {...h,q,cur,hasReal,qty,avg,gain,pct,sector,type,val,idx:i};
-  });
-  let grouped={};
-  if(state.groupMode==='sector'){ enriched.forEach(it=>{const k=it.sector||'Unknown'; if(!grouped[k]) grouped[k]=[]; grouped[k].push(it);}); }
-  else if(state.groupMode==='type'){ enriched.forEach(it=>{const k=it.type||'Other'; if(!grouped[k]) grouped[k]=[]; grouped[k].push(it);}); }
-  else { grouped={'All Holdings':enriched}; }
-  let html='';
-  Object.entries(grouped).sort((a,b)=>{const sa=a[1].reduce((s,x)=>s+x.val,0); const sb=b[1].reduce((s,x)=>s+x.val,0); return sb-sa;}).forEach(([gName,items])=>{
-    const totalVal=items.reduce((s,x)=>s+x.val,0);
-    const color=sectorColor(gName);
-    if(state.groupMode!=='flat'){
-      html+=`<div class="sector-header" style="background:${color}18;border:1px solid ${color}30;color:${color}"><span>${gName} • ${items.length}</span><span class="mono">$${totalVal.toFixed(0)}</span></div>`;
-    }
-    items.sort((a,b)=>b.val-a.val).forEach(item=>{
-      const isEditing=state.editingIdx===item.idx;
-      const divColor=sectorColor(item.sector);
-      if(isEditing){
-        html+=`<div class="flex items-center justify-between p-2.5 rounded-[12px] bg-black/5 border" style="border-color:var(--border2)"><div class="flex items-center gap-2 flex-1"><div class="w-1 h-8 rounded-full" style="background:${divColor}"></div><div><div class="font-medium text-[11px]">${item.symbol} editing</div><div class="flex gap-1 mt-1"><input id="editQty-${item.idx}" type="number" value="${item.qty}" class="w-16 h-6 px-2 rounded-[6px] text-[10px]" style="border:1px solid var(--border2)"><input id="editAvg-${item.idx}" type="number" value="${item.avg}" class="w-20 h-6 px-2 rounded-[6px] text-[10px]" style="border:1px solid var(--border2)"></div></div></div><div class="flex gap-1 ml-2"><button class="save-edit h-6 px-2.5 rounded-[8px] bg-black text-white text-[10px]" data-idx="${item.idx}">Save</button><button class="cancel-edit h-6 px-2 rounded-[8px] text-[10px]" style="background:var(--card2);border:1px solid var(--border)" data-idx="${item.idx}">Cancel</button></div></div>`;
-      } else {
-        html+=`<div class="holding-row group flex items-center justify-between p-2 rounded-[10px] hover:bg-black/[0.03] cursor-pointer" data-symbol="${item.symbol}" data-idx="${item.idx}"><div class="flex items-center gap-2 flex-1 min-w-0"><div class="w-1 h-6 rounded-full shrink-0" style="background:${divColor}"></div><div class="min-w-0 flex-1"><div class="flex items-center gap-1.5"><span class="font-medium text-[11px]">${item.symbol}</span><span class="text-[8px] px-1 py-0.5 rounded-[4px] mono" style="background:${divColor}18;color:${divColor};border:1px solid ${divColor}30">${item.type}</span></div><div class="mono text-[10px] truncate" style="color:var(--text2)">${item.sector} • ${item.hasReal?'$'+item.cur.toFixed(0):'loading...'} • ${item.qty}@${item.avg.toFixed(0)}</div></div></div><div class="flex items-center gap-2"><div class="text-right"><div class="mono text-[10px] font-medium" style="color:${item.pct==null?'var(--text3)':item.pct>=0?'var(--green)':'var(--red)'}">${item.pct==null?'—':(item.pct>=0?'+':'')+item.pct.toFixed(0)+'%'}</div><div class="mono text-[9px]" style="color:var(--text3)">$${item.val.toFixed(0)}</div></div><div class="holding-actions flex gap-0.5"><button class="edit-btn w-6 h-6 rounded-[6px] hover:bg-black/10 text-[11px]" data-idx="${item.idx}">✏️</button><button class="delete-btn w-6 h-6 rounded-[6px] hover:bg-red-500/20 text-[11px]" data-idx="${item.idx}">🗑️</button></div></div></div>`;
-      }
-    });
-  });
-  el.innerHTML=html;
-  el.querySelectorAll('[data-symbol]').forEach(d=>{ d.addEventListener('click', (e)=>{ if(e.target.closest('.edit-btn')||e.target.closest('.delete-btn')||e.target.closest('.save-edit')||e.target.closest('.cancel-edit')) return; state.selectedIdx=parseInt(d.dataset.idx); renderHoldings(); loadChart(d.dataset.symbol); }); });
-  el.querySelectorAll('.edit-btn').forEach(b=>{ b.addEventListener('click', (e)=>{ e.stopPropagation(); state.editingIdx=parseInt(b.dataset.idx); renderHoldings(); }); });
-  el.querySelectorAll('.delete-btn').forEach(b=>{ b.addEventListener('click', async (e)=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const sym=state.holdings[idx]?.symbol; if(!confirm('Delete '+sym+'?')) return; state.holdings.splice(idx,1); if(state.selectedIdx>=state.holdings.length) state.selectedIdx=Math.max(0,state.holdings.length-1); state.editingIdx=null; renderHoldings(); updateAllocation(); renderDividendBox(); await savePortfolio(); }); });
-  el.querySelectorAll('.save-edit').forEach(b=>{ b.addEventListener('click', async (e)=>{ e.stopPropagation(); const idx=parseInt(b.dataset.idx); const qtyEl=document.getElementById('editQty-'+idx); const avgEl=document.getElementById('editAvg-'+idx); const qty=parseFloat(qtyEl?.value); const avg=parseFloat(avgEl?.value); if(isNaN(qty)||qty<=0){ alert('Invalid qty'); return; } state.holdings[idx].quantity=qty; if(!isNaN(avg)) state.holdings[idx].avgCost=avg; state.editingIdx=null; renderHoldings(); updateAllocation(); renderDividendBox(); await savePortfolio(); await apiQuote(state.holdings[idx].symbol); renderHoldings(); }); });
-  el.querySelectorAll('.cancel-edit').forEach(b=>{ b.addEventListener('click', (e)=>{ e.stopPropagation(); state.editingIdx=null; renderHoldings(); }); });
-  const total=state.holdings.reduce((s,h)=>{const q=state.quotesCache[h.symbol.toUpperCase()]; return s+(q?.price? q.price*Number(h.quantity||0):0);},0);
-  document.getElementById('portValue').textContent=total?'$'+total.toLocaleString(undefined,{maximumFractionDigits:0}):'loading...';
-}
-
-function updateAllocation(){
-  const enriched=state.holdings.map(h=>{const q=state.quotesCache[h.symbol.toUpperCase()]; const price=q?.price||h.avgCost||0; const val=price*Number(h.quantity||0); const sector=getSector(q); return {sector,val};});
-  const total=enriched.reduce((s,x)=>s+x.val,0);
-  const el=document.getElementById('allocationBox');
-  if(total===0){el.innerHTML='<div style="color:var(--text3)">Fetching...</div>';return;}
-  const bySector={}; enriched.forEach(e=>{bySector[e.sector]=(bySector[e.sector]||0)+e.val;});
-  const sorted=Object.entries(bySector).sort((a,b)=>b[1]-a[1]);
-  el.innerHTML=sorted.map(([sec,val])=>{const pct=val/total*100; const color=sectorColor(sec); return `<div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background:${color}"></div><div class="flex-1 flex justify-between"><span class="text-[11px]">${sec}</span><span class="mono text-[10px]" style="color:var(--text2)">${pct.toFixed(0)}% • $${val.toFixed(0)}</span></div></div>`;}).join('');
-}
-function renderDividendBox(){
-  const divStocks=state.holdings.map(h=>{const q=state.quotesCache[h.symbol.toUpperCase()]; if(!q) return null; const dy=q.dividendYield||0; if(dy<0.01) return null; return {symbol:h.symbol, yield:dy, sector:getSector(q), price:q.price};}).filter(Boolean).sort((a,b)=>b.yield-a.yield);
-  const el=document.getElementById('dividendBox');
-  if(!divStocks.length){el.innerHTML='<div class="text-[11px]" style="color:var(--text3)">No dividend yet — prices auto-load. Add JNJ, NEE.</div>';return;}
-  el.innerHTML=divStocks.map(d=>`<div class="flex justify-between p-2 rounded-[8px] hover:bg-black/[0.03]"><div><div class="font-medium text-[11px]">${d.symbol}</div><div class="text-[9px]" style="color:var(--text3)">${d.sector}</div></div><div class="text-right"><div class="mono text-[11px]" style="color:var(--green)">${(d.yield*100).toFixed(1)}%</div><div class="mono text-[9px]" style="color:var(--text3)">$${d.price?.toFixed(0)||'—'}</div></div></div>`).join('');
-}
-function renderWatchlist(){
-  const el=document.getElementById('watchList');
-  if(!state.watchlist.length){el.innerHTML='<div class="text-[10px] py-3 text-center" style="color:var(--text3)">No watchlist</div>';return;}
-  el.innerHTML=state.watchlist.map((s,i)=>{const q=state.quotesCache[s.toUpperCase()]; const sector=q?getSector(q):'loading...'; const type=q?getType(q):'—'; const color=sectorColor(sector); return `<div class="flex items-center justify-between p-2 rounded-[10px] hover:bg-black/[0.03]" data-symbol="${s}" data-widx="${i}"><div class="flex items-center gap-2"><div class="w-1 h-6 rounded-full" style="background:${color}"></div><div><div class="flex gap-1"><span class="font-medium text-[11px]">${s}</span><span class="text-[8px] px-1 py-0.5 rounded-[4px]" style="background:${color}18;color:${color}">${type}</span></div><div class="text-[9px] mono" style="color:var(--text3)">${sector}</div></div></div><div class="flex items-center gap-1"><span class="mono text-[10px]" style="color:var(--text2)">${q?.price?'$'+q.price.toFixed(0):'loading...'}</span><button class="rm-watch w-4 h-4 rounded-[4px] hover:bg-black/10 text-[10px]" data-sym="${s}">✕</button></div></div>`;}).join('');
-  el.querySelectorAll('[data-symbol]').forEach(d=>{ d.onclick=(e)=>{ if(e.target.classList.contains('rm-watch')) return; loadChart(d.dataset.symbol);}; });
-  el.querySelectorAll('.rm-watch').forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); state.watchlist=state.watchlist.filter(x=>x!==b.dataset.sym); renderWatchlist(); savePortfolio(); });
-}
-
-async function loadChart(symbol){
-  state.currentSymbol=symbol.toUpperCase();
-  document.getElementById('chartSymbol').textContent=state.currentSymbol;
-  document.getElementById('chartPrice').textContent='loading...';
-  const q=await apiQuote(state.currentSymbol);
-  if(q&&q.price){ document.getElementById('chartPrice').textContent='$'+q.price.toFixed(2); document.getElementById('chartName').textContent=q.name||''; drawChart(q.history||[]); }
-}
-function drawChart(history){
-  const canvas=document.getElementById('stockChart'); if(!canvas) return;
-  const ctx=canvas.getContext('2d'); const dpr=window.devicePixelRatio||1; const rect=canvas.getBoundingClientRect(); canvas.width=rect.width*dpr; canvas.height=rect.height*dpr; ctx.scale(dpr,dpr); const W=rect.width,H=rect.height; ctx.clearRect(0,0,W,H);
-  if(!history.length) return;
-  const min=Math.min(...history),max=Math.max(...history); const pad=(max-min)*0.1||1; const yMin=min-pad,yMax=max+pad;
-  ctx.beginPath(); history.forEach((p,i)=>{const x=(i/(history.length-1))*W; const y=10+(1-(p-yMin)/(yMax-yMin))*(H-30); if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);});
-  const isUp=history[history.length-1]>=history[0]; ctx.strokeStyle=isUp?'#16a34a':'#dc2626'; ctx.lineWidth=2; ctx.stroke();
-}
-
-async function renderEarnings(){
-  const el=document.getElementById('earningsList');
-  const allSyms=[...new Set([...state.holdings.map(h=>h.symbol),...state.watchlist])].slice(0,10);
-  if(!allSyms.length){el.innerHTML='<div style="color:var(--text3)">Add holdings</div>';return;}
-  try{
-    const r=await fetch('/api/earnings?symbols='+allSyms.join(','));
-    const j=await r.json();
-    const earnings=j.earnings||[];
-    if(!earnings.length){ el.innerHTML='<div class="text-[11px]" style="color:var(--text3)">No upcoming earnings</div>'; return; }
-    el.innerHTML=earnings.slice(0,6).map(e=>`<div class="flex justify-between p-2 rounded-[8px]"><span class="font-medium text-[11px]">${e.symbol}</span><span class="text-[10px]" style="color:var(--text2)">${new Date(e.date).toLocaleDateString()} • ${e.daysUntil}d</span></div>`).join('');
-  }catch{ el.innerHTML='<div class="text-[11px]" style="color:var(--text3)">Earnings offline</div>'; }
-}
-
-async function loadNews(){
-  const el=document.getElementById('newsList');
-  el.innerHTML='<div class="text-[11px] py-3" style="color:var(--text3)">Loading real news...</div>';
-  try{
-    const syms=[...new Set([...state.holdings.map(h=>h.symbol),...state.watchlist,'SPY'])].slice(0,8).join(',');
-    const r=await fetch('/api/news?symbols='+syms);
-    const j=await r.json();
-    const news=j.news||[];
-    if(!news.length) throw new Error('no news');
-    el.innerHTML=news.slice(0,10).map(n=>{
-      const d=n.time? (typeof n.time==='number'? new Date(n.time*1000).toLocaleDateString() : new Date(n.time).toLocaleDateString()) : '';
-      let link=n.link && n.link.startsWith('http') ? n.link : 'https://finance.yahoo.com/quote/'+(n.symbol||'SPY')+'/news/';
-      const safeTitle=(n.title||'Market update').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return `<a href="${link}" target="_blank" rel="noopener" class="block p-2.5 rounded-[12px] hover:bg-black/[0.04] border border-transparent hover:border-[var(--border)] transition group"><div class="flex justify-between gap-2"><span class="text-[11px] font-medium line-clamp-2 group-hover:underline">${safeTitle}</span><span class="shrink-0 text-[8px] px-1.5 py-0.5 rounded-[5px] mono" style="background:#0a0a0a;color:white">${n.symbol||''}</span></div><div class="flex gap-2 mt-1.5 text-[9px]" style="color:var(--text3)"><span>${n.publisher||'Yahoo'}</span><span>•</span><span>${d}</span><span class="ml-auto">↗ real article</span></div></a>`;
-    }).join('');
-  }catch(e){
-    el.innerHTML='<div class="p-3 rounded-[12px] text-[11px]" style="background:var(--card2)">News failed — server.py now returns fallback, not 500.</div>';
-  }
-}
-
-document.querySelectorAll('.group-btn').forEach(b=> b.addEventListener('click',()=>{document.querySelectorAll('.group-btn').forEach(x=>{x.classList.remove('bg-[#0a0a0a]','text-white'); x.style.color='var(--text2)';}); b.classList.add('bg-[#0a0a0a]','text-white'); b.style.color='white'; state.groupMode=b.dataset.group; renderHoldings();}));
-
-document.getElementById('addHoldingBtn').onclick=async()=>{const sym=document.getElementById('addSymbol').value.trim().toUpperCase(); const qty=parseFloat(document.getElementById('addQty').value); const avg=parseFloat(document.getElementById('addAvg').value); if(!sym||!qty) return; state.holdings.push({symbol:sym,quantity:qty,avgCost:avg||0}); document.getElementById('addSymbol').value=''; document.getElementById('addQty').value=''; document.getElementById('addAvg').value=''; await apiQuote(sym); renderHoldings(); updateAllocation(); renderDividendBox(); savePortfolio(); loadChart(sym);};
-document.getElementById('addWatchBtn').onclick=async()=>{const s=document.getElementById('watchInput').value.trim().toUpperCase(); if(!s) return; if(!state.watchlist.includes(s)) state.watchlist.push(s); document.getElementById('watchInput').value=''; await apiQuote(s); renderWatchlist(); savePortfolio();};
-
-document.getElementById('aboutBtn').onclick=()=>{document.getElementById('aboutModal').classList.remove('hidden');document.getElementById('aboutModal').classList.add('flex');};
-document.getElementById('closeAbout').onclick=()=>{document.getElementById('aboutModal').classList.add('hidden');document.getElementById('aboutModal').classList.remove('flex');};
-document.getElementById('closeAbout2').onclick=()=>{document.getElementById('aboutModal').classList.add('hidden');document.getElementById('aboutModal').classList.remove('flex');};
-
-const aiPanel=document.getElementById('aiPanel');
-function openAi(){aiPanel.classList.remove('hidden');aiPanel.classList.add('flex');}
-function closeAi(){aiPanel.classList.add('hidden');aiPanel.classList.remove('flex');}
-document.getElementById('aiBtn').onclick=openAi; document.getElementById('aiClose').onclick=closeAi;
-function addAiMessage(role,text){const wrap=document.createElement('div'); wrap.className='flex '+(role==='user'?'justify-end':'justify-start'); wrap.innerHTML=`<div class="chat-bubble ${role==='user'?'chat-user':'chat-ai'}">${text.replace(/\n/g,'<br>')}</div>`; document.getElementById('aiMessages').appendChild(wrap); document.getElementById('aiMessages').scrollTop=document.getElementById('aiMessages').scrollHeight;}
-async function sendAi(){
- const input=document.getElementById('aiInput'); const prompt=input.value.trim(); if(!prompt) return;
- addAiMessage('user',prompt); input.value='';
- const lower=prompt.toLowerCase();
- const delMatch=lower.match(/(?:delete|remove) ([a-z]{1,5})/);
- if(delMatch){
-   const sym=delMatch[1].toUpperCase();
-   const idx=state.holdings.findIndex(h=>h.symbol.toUpperCase()===sym);
-   if(idx>=0){ if(confirm('Delete '+sym+'?')){ state.holdings.splice(idx,1); renderHoldings(); updateAllocation(); renderDividendBox(); await savePortfolio(); addAiMessage('ai','Deleted '+sym); } return; }
- }
- const editMatch=lower.match(/edit ([a-z]{1,5}) to (\d+)/);
- if(editMatch){
-   const sym=editMatch[1].toUpperCase(); const qty=parseFloat(editMatch[2]);
-   const idx=state.holdings.findIndex(h=>h.symbol.toUpperCase()===sym);
-   if(idx>=0){ state.holdings[idx].quantity=qty; renderHoldings(); updateAllocation(); await savePortfolio(); addAiMessage('ai','Edited '+sym+' to '+qty); return; }
- }
- // Show typing indicator
- const typingId='aiTyping';
- const typingEl=document.createElement('div'); typingEl.id=typingId; typingEl.className='flex justify-start'; typingEl.innerHTML='<div class="chat-bubble chat-ai text-[10px]" style="color:var(--text3)">Thinking...</div>'; document.getElementById('aiMessages').appendChild(typingEl); document.getElementById('aiMessages').scrollTop=document.getElementById('aiMessages').scrollHeight;
- try{
-   const prices={}; Object.entries(state.quotesCache).forEach(([k,v])=>{if(v.price) prices[k]=v;});
-   const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt,holdings:state.holdings,prices,currentSymbol:state.currentSymbol})});
-   const j=await res.json();
-   const t=document.getElementById(typingId); if(t) t.remove();
-   addAiMessage('ai',j.response||'No response');
- }catch(e){ const t=document.getElementById(typingId); if(t) t.remove(); addAiMessage('ai','I had trouble connecting, but your holdings are still saved. Try again — ask me to find stocks to diversify, or how much tech you have.'); }
-}
-document.getElementById('aiSend').onclick=sendAi;
-document.getElementById('aiInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendAi();}});
-
-
-// ===== PAPER TRADING / QUANT LAB JS =====
-let paperState = {cash: 100000, equity: 100000, positions: {}, trades: [], loaded: false};
-
-async function loadPaperPortfolio(){
-  try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/portfolio', {headers: token ? {'X-Auth-Token': token} : {}});
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    paperState = j;
-    renderPaperPortfolio(j);
-    document.getElementById('paperStatus').textContent = `Live — ${Object.keys(j.positions).length} positions`;
-  }catch(e){
-    console.log('paper load error', e);
-    document.getElementById('paperStatus').textContent = 'Error loading: ' + e.message;
-  }
-}
-
-function renderPaperPortfolio(data){
-  const cash = data.cash || 0;
-  const equity = data.equity || cash;
-  const pnl = equity - 100000;
-  const pnlPct = (pnl / 100000 * 100);
-  
-  document.getElementById('paperCash').textContent = '$' + cash.toLocaleString(undefined, {maximumFractionDigits:0});
-  document.getElementById('paperEquity').textContent = '$' + equity.toLocaleString(undefined, {maximumFractionDigits:0});
-  const pnlEl = document.getElementById('paperPnL');
-  pnlEl.textContent = (pnl>=0?'+':'') + '$' + pnl.toFixed(0) + ' (' + (pnlPct>=0?'+':'') + pnlPct.toFixed(2) + '%)';
-  pnlEl.style.color = pnl>=0 ? 'var(--green)' : 'var(--red)';
-  
-  document.getElementById('paperPositionsCount').textContent = Object.keys(data.positions||{}).length;
-  document.getElementById('paperTradesCount').textContent = (data.total_trades||data.trades?.length||0) + ' trades';
-  
-  // Positions list
-  const posList = document.getElementById('paperPositionsList');
-  const positions = data.positions || {};
-  if(Object.keys(positions).length === 0){
-    posList.innerHTML = '<div class="text-[11px] py-6 text-center" style="color:var(--text3)">No positions yet — run your quant model or place a manual trade</div>';
-  } else {
-    posList.innerHTML = Object.entries(positions).map(([sym, pos]) => {
-      const pnlColor = pos.pnl >=0 ? 'var(--green)' : 'var(--red)';
-      return `<div class="flex items-center justify-between p-2.5 rounded-[10px] hover:bg-black/[0.03] border" style="border-color:var(--border)">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-[8px] bg-black text-white flex items-center justify-center text-[10px] font-medium">${sym.slice(0,4)}</div>
-          <div>
-            <div class="font-medium text-[11px]">${sym} • ${pos.quantity} shares</div>
-            <div class="mono text-[10px]" style="color:var(--text2)">Avg $${pos.avgCost.toFixed(2)} → $${pos.currentPrice.toFixed(2)}</div>
-          </div>
-        </div>
-        <div class="text-right">
-          <div class="mono text-[11px] font-medium">$${pos.marketValue.toFixed(0)}</div>
-          <div class="mono text-[10px]" style="color:${pnlColor}">${pos.pnl>=0?'+':''}${pos.pnl.toFixed(0)} (${pos.pnlPct>=0?'+':''}${pos.pnlPct.toFixed(1)}%)</div>
-        </div>
-      </div>`;
+  // watchlist
+  const wl = document.getElementById('watch-list');
+  if(watchlist.length===0) wl.innerHTML='<div style="font-size:12px;color:var(--muted)">No watchlist</div>';
+  else{
+    wl.innerHTML = watchlist.map(t=>{
+      const lp = livePrices[t]||{price:0, change_percent:0};
+      return `<div class="watch-item"><span><b>${t}</b> $${(lp.price||0).toFixed(2)} <span class="${(lp.change_percent||0)>=0?'green':'red'}">${(lp.change_percent||0).toFixed(2)}%</span></span><span><button class="btn btn-sm" onclick="removeWatch('${t}')">X</button></span></div>`;
     }).join('');
   }
-  
-  // Trade history
-  const histEl = document.getElementById('paperHistoryList');
-  const trades = (data.trades || []).slice().reverse();
-  if(trades.length === 0){
-    histEl.innerHTML = '<div class="text-[11px] py-3 text-center" style="color:var(--text3)">No trades yet</div>';
-  } else {
-    histEl.innerHTML = trades.slice(0,30).map(t => {
-      const isBuy = t.action === 'BUY';
-      return `<div class="flex items-center justify-between p-2 rounded-[8px] hover:bg-black/[0.02]">
-        <div class="flex items-center gap-2">
-          <span class="text-[8px] px-1.5 py-0.5 rounded-[4px] font-medium ${isBuy ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">${t.action}</span>
-          <span class="font-medium text-[11px]">${t.symbol}</span>
-          <span class="mono text-[10px]" style="color:var(--text2)">${t.quantity} @ $${t.price.toFixed(2)}</span>
-        </div>
-        <div class="text-right">
-          <div class="mono text-[10px]" style="color:var(--text2)">${new Date(t.timestamp).toLocaleTimeString()}</div>
-          <div class="text-[9px] truncate max-w-[120px]" style="color:var(--text3)">${t.reason||''}</div>
-        </div>
-      </div>`;
-    }).join('');
-  }
+  fetchChart();
+  fetchNews();
 }
 
-async function loadQuantInfo(){
+async function askAI(q){
+  if(!q) return;
+  document.getElementById('ai-input').value='';
+  const box = document.getElementById('ai-box');
+  box.innerHTML += `<div class="ai-msg user">You: ${q}</div>`;
   try{
-    const r = await fetch('/api/quant/info');
-    const j = await r.json();
-    const info = j.info || {};
-    document.getElementById('quantModelName').textContent = info.name || 'Custom Model';
-    document.getElementById('quantModelStatus').textContent = j.has_model ? 'quant_model.py found ✓' : 'No file yet';
-    document.getElementById('quantUniverse').textContent = (j.universe||[]).join(', ') || 'AAPL, MSFT, SPY...';
-    document.getElementById('quantInfo').textContent = info.description || JSON.stringify(info.params||{}, null, 2) || 'Template model — replace with your logic';
-    
-    // Try to load code preview if available
-    try{
-      const codeR = await fetch('/quant_model.py');
-      if(codeR.ok){
-        const code = await codeR.text();
-        document.getElementById('quantCodePreview').textContent = code.slice(0, 3000);
-      }
-    }catch{}
-  }catch(e){
-    console.log('quant info error', e);
-  }
+    const res = await fetch('/api/ai/portfolio', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:q, portfolio:{positions}, watchlist, live_prices:livePrices})});
+    const data = await res.json();
+    box.innerHTML += `<div class="ai-msg bot">AI: ${data.answer} <span style="font-size:10px;color:var(--muted)">[${data.source}]</span></div>`;
+    box.scrollTop = box.scrollHeight;
+  }catch(e){ box.innerHTML += `<div class="ai-msg bot">Error: ${e}</div>`; }
 }
 
-async function runQuantModel(){
-  const btn = document.getElementById('quantRunBtn');
-  const statusEl = document.getElementById('quantRunStatus');
-  const signalsEl = document.getElementById('quantSignals');
-  const autoExec = document.getElementById('autoExecuteCheck')?.checked || false;
-  
-  btn.textContent = 'Running...';
-  btn.disabled = true;
-  statusEl.textContent = 'Fetching live prices for universe and running your quant_model.py...';
-  signalsEl.innerHTML = '<div class="text-[11px] text-center py-4" style="color:var(--text2)">Running model...</div>';
-  
-  try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/run_quant', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({auto_execute: autoExec})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    
-    const signals = j.signals || [];
-    statusEl.textContent = `Generated ${signals.length} signals from ${j.price_data_count} symbols. ${autoExec ? `Executed ${j.executed?.length||0} as paper trades.` : ''}`;
-    
-    if(signals.length === 0){
-      signalsEl.innerHTML = '<div class="text-[11px] text-center py-6" style="color:var(--text3)">No signals right now — your model is flat.<br><span class="text-[10px]">This means your conditions didn\'t trigger. Try adjusting thresholds in quant_model.py or expand universe.</span></div>';
-    } else {
-      signalsEl.innerHTML = signals.map(s => {
-        const isBuy = s.action === 'BUY';
-        return `<div class="flex items-center justify-between p-3 rounded-[12px] bg-white border" style="border-color:var(--border);">
-          <div class="flex items-center gap-2.5">
-            <span class="w-7 h-7 rounded-full flex items-center justify-center text-[11px] ${isBuy?'bg-green-500 text-white':'bg-red-500 text-white'}">${isBuy?'↗':'↘'}</span>
-            <div>
-              <div class="flex items-center gap-2"><span class="font-semibold text-[12px]">${s.symbol}</span><span class="text-[10px] px-1.5 py-0.5 rounded-full ${isBuy?'bg-green-100 text-green-700':'bg-red-100 text-red-700'}">${s.action} ${s.quantity}</span><span class="text-[9px] px-1.5 py-0.5 rounded-full bg-black text-white">${Math.round((s.confidence||0.5)*100)}% conf</span></div>
-              <div class="text-[10px] mt-0.5" style="color:var(--text2)">${s.reason||'Quant signal'}</div>
-            </div>
-          </div>
-          <div class="flex gap-1">
-            <button class="paper-exec-signal h-7 px-3 rounded-[8px] bg-[#0a0a0a] text-white text-[10px]" data-symbol="${s.symbol}" data-action="${s.action}" data-qty="${s.quantity}" data-reason="${(s.reason||'').replace(/"/g, '&quot;')}">Execute</button>
-          </div>
-        </div>`;
-      }).join('');
-      
-      // Add click handlers for execute buttons
-      signalsEl.querySelectorAll('.paper-exec-signal').forEach(btn => {
-        btn.onclick = async () => {
-          const sym = btn.dataset.symbol;
-          const action = btn.dataset.action;
-          const qty = btn.dataset.qty;
-          const reason = btn.dataset.reason;
-          await executePaperTrade(sym, qty, action, reason);
-        };
-      });
-    }
-    
-    if(autoExec){
-      await loadPaperPortfolio();
-    }
-    
-  }catch(e){
-    console.error(e);
-    statusEl.textContent = 'Error: ' + e.message;
-    signalsEl.innerHTML = `<div class="p-3 rounded-[10px] bg-red-50 text-red-700 text-[11px]">Error running model: ${e.message}<br><br>Make sure quant_model.py exists and has generate_signals() function. Check server logs.</div>`;
-  }finally{
-    btn.textContent = '▶ Run Model';
-    btn.disabled = false;
-  }
-}
-
-async function executePaperTrade(symbol, quantity, action, reason){
-  const statusEl = document.getElementById('paperTradeStatus');
-  try{
-    statusEl.textContent = `Executing ${action} ${quantity} ${symbol}...`;
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/trade', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({symbol, quantity: parseFloat(quantity), action, reason: reason||'Manual paper trade'})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    statusEl.textContent = `✓ ${action} ${quantity} ${symbol} executed`;
-    await loadPaperPortfolio();
-  }catch(e){
-    statusEl.textContent = 'Error: ' + e.message;
-  }
-}
-
-async function runBacktest(){
-  const btn = document.getElementById('backtestBtn');
-  const sym = document.getElementById('backtestSymbol').value;
-  btn.textContent = 'Running...';
-  try{
-    const r = await fetch('/api/paper/backtest', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({symbol: sym, period: '1y'})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    
-    const statsEl = document.getElementById('backtestStats');
-    if(j.return_pct !== undefined){
-      statsEl.innerHTML = `
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Final Equity</div><div class="mono font-medium">$${j.final.toFixed(0)}</div></div>
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Return</div><div class="mono font-medium" style="color:${j.return_pct>=0?'var(--green)':'var(--red)'}">${j.return_pct>=0?'+':''}${j.return_pct.toFixed(1)}%</div></div>
-        <div class="p-2 rounded-[8px]" style="background:var(--card2)"><div class="text-[9px]" style="color:var(--text3)">Trades</div><div class="mono font-medium">${j.trades?.length||0}</div></div>
-      `;
-    } else {
-      statsEl.innerHTML = `<div class="text-[10px] p-2" style="color:var(--text2)">${j.note||''}<br>Buy & Hold: ${j.buy_hold_return?.toFixed(1)}%</div>`;
-    }
-    
-    // Draw equity curve if available
-    if(j.equity_curve){
-      drawPaperChart(j.equity_curve);
-    }
-  }catch(e){
-    console.error(e);
-    document.getElementById('backtestStats').innerHTML = `<div class="text-[10px] p-2 bg-red-50 text-red-700 rounded">Error: ${e.message}</div>`;
-  }finally{
-    btn.textContent = 'Run Backtest';
-  }
-}
-
-function drawPaperChart(equityData){
-  const canvas = document.getElementById('paperChart');
-  if(!canvas || !equityData || equityData.length===0) return;
-  const ctx = canvas.getContext('2d');
-  const dpr = window.devicePixelRatio||1;
-  const rect = canvas.getBoundingClientRect();
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.scale(dpr, dpr);
-  const W = rect.width, H = rect.height;
-  ctx.clearRect(0,0,W,H);
-  
-  const equities = equityData.map(d=>d.equity);
-  const min = Math.min(...equities);
-  const max = Math.max(...equities);
-  const pad = (max-min)*0.1 || 1;
-  const yMin = min-pad, yMax = max+pad;
-  
-  // Grid
-  ctx.strokeStyle = 'rgba(0,0,0,0.05)';
-  ctx.lineWidth = 1;
-  for(let i=0;i<4;i++){
-    const y = (i/3)*H;
-    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
-  }
-  
-  // Line
-  ctx.beginPath();
-  equities.forEach((eq, i) => {
-    const x = (i/(equities.length-1))*W;
-    const y = 10 + (1 - (eq - yMin)/(yMax - yMin)) * (H-30);
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  const isUp = equities[equities.length-1] >= equities[0];
-  ctx.strokeStyle = isUp ? '#16a34a' : '#dc2626';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Fill
-  ctx.lineTo(W, H);
-  ctx.lineTo(0, H);
-  ctx.closePath();
-  ctx.fillStyle = isUp ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)';
-  ctx.fill();
-}
-
-// Toggle between portfolio and paper trading
-function showPaperTrading(){
-  document.querySelector('main').classList.add('hidden');
-  document.getElementById('paperTradingSection').classList.remove('hidden');
-  loadPaperPortfolio();
-  loadQuantInfo();
-}
-
-function showMainPortfolio(){
-  document.querySelector('main').classList.remove('hidden');
-  document.getElementById('paperTradingSection').classList.add('hidden');
-}
-
-// Event listeners
-document.getElementById('paperBtn')?.addEventListener('click', showPaperTrading);
-document.getElementById('paperBackBtn')?.addEventListener('click', showMainPortfolio);
-
-document.getElementById('paperTradeBtn')?.addEventListener('click', async () => {
-  const sym = document.getElementById('paperSymbol').value.trim().toUpperCase();
-  const qty = document.getElementById('paperQty').value;
-  const action = document.getElementById('paperAction').value;
-  if(!sym || !qty) return;
-  await executePaperTrade(sym, qty, action, 'Manual paper trade');
-  document.getElementById('paperSymbol').value = '';
-  document.getElementById('paperQty').value = '';
-});
-
-document.getElementById('paperQuoteBtn')?.addEventListener('click', async () => {
-  const sym = document.getElementById('paperSymbol').value.trim().toUpperCase();
-  if(!sym) return;
-  try{
-    const r = await fetch('/api/quote/'+sym);
-    const j = await r.json();
-    document.getElementById('paperTradeStatus').textContent = `${sym} $${j.price.toFixed(2)} ${j.changePct>=0?'+':''}${j.changePct.toFixed(2)}% — ${j.sector}`;
-  }catch(e){
-    document.getElementById('paperTradeStatus').textContent = 'Quote error: ' + e.message;
-  }
-});
-
-document.getElementById('quantRunBtn')?.addEventListener('click', runQuantModel);
-document.getElementById('quantInfoBtn')?.addEventListener('click', loadQuantInfo);
-document.getElementById('refreshPaperBtn')?.addEventListener('click', loadPaperPortfolio);
-document.getElementById('backtestBtn')?.addEventListener('click', runBacktest);
-
-document.getElementById('paperResetBtn')?.addEventListener('click', async () => {
-  if(!confirm('Reset paper portfolio to $100k? This will delete all paper positions and trades.')) return;
-  try{
-    const token = localStorage.getItem('flow_token') || '';
-    const r = await fetch('/api/paper/reset', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json', ...(token?{'X-Auth-Token': token}:{})},
-      body: JSON.stringify({})
-    });
-    const j = await r.json();
-    if(j.error) throw new Error(j.error);
-    await loadPaperPortfolio();
-  }catch(e){
-    alert('Reset error: ' + e.message);
-  }
-});
-
-// Quick buttons for paper trading
-document.querySelectorAll('.ai-quick').forEach(btn => {
-  if(btn.textContent.includes('diversify')){
-    btn.addEventListener('click', () => {
-      showPaperTrading();
-    });
-  }
-});
-
-
-loadPortfolio();
+// init
+refreshAll();
+setPeriod('1mo');
 </script>
-</body></html>
+</body>
+</html>

@@ -1,9 +1,6 @@
-# TICKR Master Requirements - FIXED FOR RENDER
 flask==2.3.3
 flask-cors==4.0.0
 gunicorn==21.2.0
 yfinance==0.2.28
 pandas==2.1.4
 numpy==1.26.2
-pyyaml==6.0.1
-polars==0.20.3

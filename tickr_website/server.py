@@ -1,160 +1,216 @@
 """
-TICKR Website Server — Fixed for Render
-Serves index.html + paper trading + quant lab
-Works both locally and on Render with gunicorn
+TICKR v14 Server - Portfolio Mode - NO HALLUCINATION
+All prices from yfinance only
 """
-import os
-import sys
+import os, traceback
+from datetime import datetime
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
-# --- Quant model import (works both locally and on Render) ---
-# Your real model is in tickr_alpha_engine, but on Render we only have tickr_website
-# So try both
-try:
-    # Try local structure: ../tickr_alpha_engine
-    engine_path = os.path.join(os.path.dirname(__file__), "..", "tickr_alpha_engine")
-    if os.path.exists(engine_path):
-        sys.path.insert(0, os.path.abspath(engine_path))
-    
-    import quant_model
-    HAS_QUANT = True
-    print(f"✓ Loaded quant_model from {quant_model.__file__}")
-except Exception as e:
-    print(f"⚠ Failed to load quant_model: {e}")
-    # Create dummy fallback so website still loads
-    HAS_QUANT = False
-    class DummyQuant:
-        def get_universe(self): return ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","SPY","QQQ","IWM"]
-        def get_model_info(self): return {"name":"Quant (fallback)","description":"Real model not loaded","version":"fallback"}
-        def generate_signals(self, *a, **kw): return []
-    quant_model = DummyQuant()
-
-# Flask setup - serve from this folder
 app = Flask(__name__, static_folder=".", static_url_path="")
 CORS(app)
 
-# In-memory paper portfolio (for Render demo)
-paper_portfolio = {
-    "cash": 100000.0,
-    "positions": {},  # symbol -> {quantity, avg_price}
-    "trades": []
-}
+try:
+    import yfinance as yf
+    HAS_YFINANCE = True
+except Exception as e:
+    HAS_YFINANCE = False
+    print(f"yfinance missing: {e}")
 
 @app.route("/")
 def index():
     return send_from_directory(".", "index.html")
 
-@app.route("/<path:path>")
-def serve_static(path):
-    # Serve manifest, icons, etc
-    if os.path.exists(os.path.join(".", path)):
-        return send_from_directory(".", path)
-    # Otherwise return index.html for SPA routing
+@app.route("/quant")
+def quant_page():
     return send_from_directory(".", "index.html")
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status":"ok", "quant_loaded": HAS_QUANT})
+    return jsonify({"status":"ok","yfinance":HAS_YFINANCE,"version":"v14"})
 
-@app.route("/api/model/info")
-def model_info():
+def get_hist(symbol, period):
     try:
-        info = quant_model.get_model_info()
-        return jsonify(info)
+        if not HAS_YFINANCE:
+            return None
+        t = yf.Ticker(symbol)
+        mapping = {"1d":"1d","5d":"5d","1mo":"1mo","3mo":"3mo","6mo":"6mo","1y":"1y","2y":"2y","5y":"5y","ytd":"ytd","max":"max","1M":"1mo","3M":"3mo","YTD":"ytd","ALL":"max"}
+        yp = mapping.get(period, "1mo")
+        hist = t.history(period=yp, auto_adjust=True)
+        if hist.empty:
+            return None
+        hist = hist.tail(500)
+        dates = [d.strftime("%Y-%m-%d") for d in hist.index]
+        closes = [float(x) for x in hist["Close"].tolist()]
+        return {"dates": dates, "closes": closes}
+    except:
+        return None
+
+@app.route("/api/price/history")
+def price_history():
+    try:
+        tickers_param = request.args.get("tickers", "")
+        shares_param = request.args.get("shares", "")
+        period = request.args.get("period", "1mo")
+        if not tickers_param:
+            return jsonify({"error":"No tickers"}), 400
+        tickers = [t.strip().upper() for t in tickers_param.split(",") if t.strip()]
+        shares = [1.0]*len(tickers)
+        if shares_param:
+            try:
+                shares = [float(x) for x in shares_param.split(",")]
+            except:
+                pass
+        if len(shares) != len(tickers):
+            shares = [1.0]*len(tickers)
+        if not HAS_YFINANCE:
+            return jsonify({"error":"yfinance not available"}), 500
+        histories = {}
+        min_len = None
+        for sym in tickers:
+            d = get_hist(sym, period)
+            if d:
+                histories[sym] = d
+                if min_len is None or len(d["dates"]) < min_len:
+                    min_len = len(d["dates"])
+        if not histories:
+            return jsonify({"error":"No data"}), 404
+        base_sym = max(histories, key=lambda k: len(histories[k]["dates"]))
+        base_dates = histories[base_sym]["dates"][-min_len:]
+        equity = []
+        for i in range(min_len):
+            tot = 0.0
+            for idx, sym in enumerate(tickers):
+                if sym in histories:
+                    cl = histories[sym]["closes"][-min_len:]
+                    if i < len(cl):
+                        tot += cl[i] * shares[idx]
+            equity.append(tot)
+        spy = get_hist("SPY", period)
+        spy_eq = None
+        if spy and equity and spy["closes"]:
+            spy_cl = spy["closes"][-min_len:]
+            if equity[0] and spy_cl[0]:
+                factor = equity[0]/spy_cl[0]
+                spy_eq = [c*factor for c in spy_cl]
+        return jsonify({"dates": base_dates, "equity": equity, "spy": spy_eq, "histories": histories, "tickers": tickers, "period": period, "source":"yfinance"})
     except Exception as e:
-        return jsonify({"error": str(e), "name":"Error loading model"}), 500
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
-@app.route("/api/paper/portfolio")
-def paper_portfolio_api():
-    return jsonify(paper_portfolio)
+@app.route("/api/price/live")
+def price_live():
+    try:
+        tickers_param = request.args.get("tickers", "")
+        tickers = [t.strip().upper() for t in tickers_param.split(",") if t.strip()]
+        result = {}
+        if HAS_YFINANCE:
+            for sym in tickers:
+                try:
+                    t = yf.Ticker(sym)
+                    hist = t.history(period="2d", auto_adjust=True)
+                    if not hist.empty:
+                        last = float(hist["Close"].iloc[-1])
+                        prev = float(hist["Close"].iloc[-2]) if len(hist)>1 else last
+                        result[sym] = {"price": last, "change": last-prev, "change_percent": ((last-prev)/prev*100) if prev else 0, "source":"yfinance"}
+                except Exception as e:
+                    result[sym] = {"error": str(e)}
+        return jsonify(result)
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
-@app.route("/api/paper/run_quant", methods=["POST"])
-def run_quant():
+@app.route("/api/news")
+def news_api():
+    try:
+        tickers_param = request.args.get("tickers", "AAPL")
+        tickers = [t.strip().upper() for t in tickers_param.split(",") if t.strip()][:10]
+        all_news = []
+        if HAS_YFINANCE:
+            for sym in tickers:
+                try:
+                    t = yf.Ticker(sym)
+                    news = t.news
+                    for item in news[:5]:
+                        title = item.get("title") or "Untitled"
+                        link = item.get("link") or f"https://finance.yahoo.com/quote/{sym}/news"
+                        publisher = item.get("publisher") or "Yahoo"
+                        pub_time = item.get("providerPublishTime") or ""
+                        if isinstance(pub_time, int):
+                            time_ago = datetime.fromtimestamp(pub_time).strftime("%Y-%m-%d")
+                        else:
+                            time_ago = str(pub_time)[:10]
+                        all_news.append({"ticker": sym, "title": title, "link": link, "publisher": publisher, "time": time_ago, "source":"yfinance"})
+                except:
+                    continue
+        seen=set()
+        dedup=[]
+        for n in all_news:
+            if n["title"] not in seen:
+                seen.add(n["title"])
+                dedup.append(n)
+        return jsonify({"news": dedup[:20], "source":"yfinance", "tickers": tickers})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": str(e), "news":[]}), 500
+
+@app.route("/api/ai/portfolio", methods=["POST"])
+def ai_portfolio():
     try:
         body = request.get_json() or {}
-        # Expecting price_data from frontend, or fetch live if empty
-        price_data = body.get("price_data", {})
-        current_positions = paper_portfolio.get("positions", {})
-        cash = paper_portfolio.get("cash", 100000)
-        portfolio_value = body.get("portfolio_value", cash)
-
-        # If frontend didn't send price_data, build empty and let quant_model fetch via yfinance
-        if not price_data and HAS_QUANT:
-            # quant_model will fetch its own data if price_data empty (from your implementation)
-            pass
-
-        signals = quant_model.generate_signals(price_data, current_positions, cash, portfolio_value)
-        return jsonify({"signals": signals, "count": len(signals)})
+        q = (body.get("question") or "").lower()
+        portfolio = body.get("portfolio", {})
+        positions = portfolio.get("positions", {})
+        watchlist = body.get("watchlist", [])
+        live_prices = body.get("live_prices", {})
+        tickers = list(positions.keys())
+        total = 0
+        SECTOR_MAP = {"AAPL":"Technology","MSFT":"Technology","NVDA":"Technology","GOOGL":"Technology","META":"Technology","TSLA":"Consumer Cyclical","AMZN":"Consumer Cyclical","SPY":"ETF","QQQ":"ETF","JPM":"Financial","XOM":"Energy","JNJ":"Healthcare"}
+        sector_counts={}
+        for t in tickers:
+            sec=SECTOR_MAP.get(t,"Other")
+            sector_counts[sec]=sector_counts.get(sec,0)+1
+        most=None
+        if positions and live_prices:
+            vals=[]
+            for t,pos in positions.items():
+                shares=pos.get("shares",0)
+                price=live_prices.get(t,{}).get("price",0)
+                val=shares*price
+                vals.append((t,val))
+                total+=val
+            if vals:
+                vals.sort(key=lambda x:x[1], reverse=True)
+                most=vals[0]
+        def resp(text):
+            return jsonify({"answer": text, "source":"rule-based"})
+        if not tickers and any(k in q for k in ["diversif","risk","summarize","sector"]):
+            return resp("Portfolio empty. Add stocks on left panel to analyze.")
+        if any(k in q for k in ["diversif","spread","concentrated"]):
+            tech=sector_counts.get("Technology",0)/len(tickers)*100 if tickers else 0
+            if tech>60:
+                return resp(f"Youre {tech:.0f}% Tech. High concentration. Consider XLF, XLV, XLE, or JNJ, JPM. Diversification {max(0,100-int(tech))}/100.")
+            return resp(f"You have {len(sector_counts)} sectors: {', '.join([f'{k} {v}' for k,v in sector_counts.items()])}. Score {85-int(tech/3)}/100.")
+        if any(k in q for k in ["risk","riskiest","volatile"]):
+            if most:
+                return resp(f"Riskiest: {most[0]} ${most[1]:,.2f} ({most[1]/total*100 if total else 0:.1f}%). If drops 10%, lose ${most[1]*0.1:,.2f}. Trim if >25%.")
+            return resp("Add positions to analyze risk.")
+        if any(k in q for k in ["beat spy","vs spy","outperform"]):
+            return resp("Check chart vs SPY. If equity above SPY normalized, outperforming.")
+        if any(k in q for k in ["sector"]):
+            return resp(f"Sector: {', '.join([f'{k}:{v}' for k,v in sector_counts.items()])}." if sector_counts else "No sectors yet.")
+        if any(k in q for k in ["summarize","summary","overview"]):
+            summary=f"You hold {len(tickers)}: {', '.join(tickers)}. Total ~${total:,.2f} (yfinance). "
+            if most:
+                summary+=f"Largest {most[0]} {most[1]/total*100 if total else 0:.1f}%. "
+            return resp(summary)
+        if any(k in q for k in ["hello","hi","help"]):
+            return resp("Hi! Try: How can I diversify? Whats riskiest? Am I beating SPY? Summarize.")
+        return resp(f"Analyzed {len(tickers)} positions. Total ~${total:,.2f}. Try: How can I diversify?")
     except Exception as e:
-        import traceback
         traceback.print_exc()
-        return jsonify({"error": str(e), "signals": []}), 500
-
-@app.route("/api/paper/trade", methods=["POST"])
-def paper_trade():
-    try:
-        body = request.get_json()
-        symbol = body.get("symbol")
-        action = body.get("action")  # BUY/SELL
-        quantity = int(body.get("quantity", 0))
-        price = float(body.get("price", 0))
-
-        if not symbol or quantity <= 0:
-            return jsonify({"error":"Invalid trade"}), 400
-
-        if action == "BUY":
-            cost = quantity * price
-            if paper_portfolio["cash"] < cost:
-                return jsonify({"error":"Not enough cash"}), 400
-            paper_portfolio["cash"] -= cost
-            pos = paper_portfolio["positions"].get(symbol, {"quantity":0, "avg_price":0})
-            total_cost = pos["quantity"]*pos["avg_price"] + cost
-            pos["quantity"] += quantity
-            pos["avg_price"] = total_cost / pos["quantity"] if pos["quantity"] else 0
-            paper_portfolio["positions"][symbol] = pos
-
-        elif action == "SELL":
-            pos = paper_portfolio["positions"].get(symbol)
-            if not pos or pos["quantity"] < quantity:
-                return jsonify({"error":"Not enough shares"}), 400
-            paper_portfolio["cash"] += quantity * price
-            pos["quantity"] -= quantity
-            if pos["quantity"] == 0:
-                del paper_portfolio["positions"][symbol]
-
-        paper_portfolio["trades"].append({
-            "symbol": symbol,
-            "action": action,
-            "quantity": quantity,
-            "price": price,
-            "timestamp": __import__("datetime").datetime.utcnow().isoformat()
-        })
-
-        return jsonify(paper_portfolio)
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-
-@app.route("/api/price/<symbol>")
-def price_api(symbol):
-    try:
-        import yfinance as yf
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period="1mo")
-        if hist.empty:
-            return jsonify({"error":"No data"}), 404
-        return jsonify({
-            "symbol": symbol,
-            "price": float(hist["Close"].iloc[-1]),
-            "history": hist["Close"].tail(60).tolist()
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"answer": f"Error {e}"}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
-    print(f"Starting TICKR on http://localhost:{port}")
-    print(f"Quant loaded: {HAS_QUANT}")
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port)
