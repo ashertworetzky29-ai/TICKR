@@ -1,1 +1,1 @@
-web: cd tickr_website && gunicorn server:app
+web: cd tickr_website && gunicorn server:app --bind 0.0.0.0:$PORT
