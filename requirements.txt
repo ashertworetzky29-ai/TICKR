@@ -4,3 +4,4 @@ gunicorn
 yfinance
 pandas
 numpy
+lxml
