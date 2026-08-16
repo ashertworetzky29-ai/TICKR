@@ -1,6 +1,6 @@
 """
-TICKR v14 Server - Portfolio Mode - NO HALLUCINATION
-All prices from yfinance only
+TICKR v15 Server - Portfolio isolated, Quant isolated (liquid glass info page)
+NO HALLUCINATION - all prices yfinance
 """
 import os, traceback
 from datetime import datetime
@@ -15,7 +15,6 @@ try:
     HAS_YFINANCE = True
 except Exception as e:
     HAS_YFINANCE = False
-    print(f"yfinance missing: {e}")
 
 @app.route("/")
 def index():
@@ -27,7 +26,7 @@ def quant_page():
 
 @app.route("/api/health")
 def health():
-    return jsonify({"status":"ok","yfinance":HAS_YFINANCE,"version":"v14"})
+    return jsonify({"status":"ok","yfinance":HAS_YFINANCE,"version":"v15"})
 
 def get_hist(symbol, period):
     try:
@@ -184,32 +183,57 @@ def ai_portfolio():
                 most=vals[0]
         def resp(text):
             return jsonify({"answer": text, "source":"rule-based"})
-        if not tickers and any(k in q for k in ["diversif","risk","summarize","sector"]):
-            return resp("Portfolio empty. Add stocks on left panel to analyze.")
-        if any(k in q for k in ["diversif","spread","concentrated"]):
+        if not tickers:
+            return resp("Portfolio empty. Add stocks left panel.")
+        if any(k in q for k in ["diversif"]):
             tech=sector_counts.get("Technology",0)/len(tickers)*100 if tickers else 0
-            if tech>60:
-                return resp(f"Youre {tech:.0f}% Tech. High concentration. Consider XLF, XLV, XLE, or JNJ, JPM. Diversification {max(0,100-int(tech))}/100.")
-            return resp(f"You have {len(sector_counts)} sectors: {', '.join([f'{k} {v}' for k,v in sector_counts.items()])}. Score {85-int(tech/3)}/100.")
-        if any(k in q for k in ["risk","riskiest","volatile"]):
+            return resp(f"{tech:.0f}% Tech. Diversification {max(0,100-int(tech))}/100. Consider XLF, XLV, XLE.")
+        if any(k in q for k in ["risk","riskiest"]):
             if most:
-                return resp(f"Riskiest: {most[0]} ${most[1]:,.2f} ({most[1]/total*100 if total else 0:.1f}%). If drops 10%, lose ${most[1]*0.1:,.2f}. Trim if >25%.")
-            return resp("Add positions to analyze risk.")
-        if any(k in q for k in ["beat spy","vs spy","outperform"]):
-            return resp("Check chart vs SPY. If equity above SPY normalized, outperforming.")
-        if any(k in q for k in ["sector"]):
-            return resp(f"Sector: {', '.join([f'{k}:{v}' for k,v in sector_counts.items()])}." if sector_counts else "No sectors yet.")
-        if any(k in q for k in ["summarize","summary","overview"]):
-            summary=f"You hold {len(tickers)}: {', '.join(tickers)}. Total ~${total:,.2f} (yfinance). "
-            if most:
-                summary+=f"Largest {most[0]} {most[1]/total*100 if total else 0:.1f}%. "
-            return resp(summary)
-        if any(k in q for k in ["hello","hi","help"]):
-            return resp("Hi! Try: How can I diversify? Whats riskiest? Am I beating SPY? Summarize.")
-        return resp(f"Analyzed {len(tickers)} positions. Total ~${total:,.2f}. Try: How can I diversify?")
+                return resp(f"Riskiest: {most[0]} ${most[1]:,.2f} ({most[1]/total*100 if total else 0:.1f}%). Trim if >25%.")
+            return resp("Add positions.")
+        if any(k in q for k in ["summarize","overview"]):
+            return resp(f"You hold {len(tickers)}: {', '.join(tickers)}. Total ~${total:,.2f} (yfinance).")
+        return resp(f"Analyzed {len(tickers)} positions. Total ~${total:,.2f}.")
     except Exception as e:
         traceback.print_exc()
         return jsonify({"answer": f"Error {e}"}), 500
+
+# ---- QUANT ROUTES ISOLATED ----
+@app.route("/api/quant/info")
+def quant_info():
+    """Isolated quant info - lazy import, never breaks portfolio routes"""
+    try:
+        import sys, os
+        # Try both locations
+        engine_path = os.path.join(os.path.dirname(__file__), "..", "tickr_alpha_engine")
+        if os.path.exists(engine_path):
+            sys.path.insert(0, os.path.abspath(engine_path))
+        try:
+            import quant_model
+            info = quant_model.get_model_info() if hasattr(quant_model, 'get_model_info') else {}
+            universe = quant_model.get_universe() if hasattr(quant_model, 'get_universe') else ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","SPY","QQQ","IWM"]
+            return jsonify({
+                "loaded": True,
+                "name": info.get("name","Local Quant v1 — LightGBM + XGB"),
+                "description": info.get("description","Ensemble of LightGBM + XGBoost on 20 factors"),
+                "version": info.get("version","v1"),
+                "universe": universe,
+                "factors": info.get("factors",[]),
+                "source": "quant_model.py"
+            })
+        except Exception as e:
+            traceback.print_exc()
+            return jsonify({
+                "loaded": False,
+                "name": "Quant (fallback)",
+                "error": str(e),
+                "universe": ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","SPY","QQQ","IWM","JPM","JNJ","XOM","NFLX","AMD"],
+                "description": "Real model not loaded — using fallback universe. Place quant_model.py in tickr_website/ or tickr_alpha_engine/"
+            })
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"loaded": False, "error": str(e), "universe":[]}), 500
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))

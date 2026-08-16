@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tickr-v14
+    name: tickr-v15
     env: python
     plan: free
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt

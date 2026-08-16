@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TICKR v14 — Portfolio</title>
+<title>TICKR v15 — Portfolio + Quant Lab</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
-  --bg: #0a0a0b; --card: #141416; --border: #232326; --text: #e8e8ea; --muted: #9a9aa0;
-  --accent: #6d5cff; --green: #22c55e; --red: #ef4444; --yellow: #eab308;
+  --bg: #08080a; --card: #141416; --border: #232326; --text: #e8e8ea; --muted: #9a9aa0;
+  --accent: #6d5cff; --green: #22c55e; --red: #ef4444;
 }
 [data-theme="light"] { --bg:#fafafa; --card:#ffffff; --border:#e5e7eb; --text:#111827; --muted:#6b7280; --accent:#6d5cff; }
 [data-theme="forest"] { --bg:#0f1a14; --card:#1a2e22; --border:#2a4a35; --text:#d1e7d6; --muted:#8fb89a; --accent:#4ade80; }
@@ -16,14 +16,13 @@
 [data-theme="midnight"] { --bg:#0c1220; --card:#131c2f; --border:#1e2a45; --text:#cbd5e1; --muted:#64748b; --accent:#60a5fa; }
 [data-theme="paper"] { --bg:#fdf6e3; --card:#fffbf0; --border:#e8dcc6; --text:#433422; --muted:#8d7d65; --accent:#b45309; }
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,sans-serif;line-height:1.5;transition:all .2s}
-.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,system-ui,sans-serif;line-height:1.5;transition:background .3s}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--card);position:sticky;top:0;z-index:100;backdrop-filter:blur(20px)}
 .logo{font-weight:900;font-size:20px;letter-spacing:-1px}
-.toggle{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px}
-.toggle button{padding:6px 16px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:13px}
-.toggle button.active{background:var(--accent);color:white}
+.toggle{display:flex;align-items:center;gap:4px;background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px}
+.toggle button{padding:6px 16px;border-radius:999px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-weight:600;font-size:13px;transition:all .2s}
+.toggle button.active{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(109,92,255,.4)}
 .stats{display:flex;gap:16px;align-items:center;font-size:13px}
-.stat b{color:var(--text)}
 .theme-btn{padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);cursor:pointer}
 .layout{display:grid;grid-template-columns:300px 1fr 360px;gap:16px;padding:16px;min-height:calc(100vh - 60px)}
 @media(max-width:1200px){.layout{grid-template-columns:1fr;}}
@@ -33,7 +32,6 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
 .btn{padding:10px 14px;border-radius:8px;border:none;background:var(--accent);color:white;font-weight:600;cursor:pointer;width:100%}
 .btn-sm{padding:6px 10px;font-size:12px;width:auto}
 .holding{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
-.holding:last-child{border:none}
 .green{color:var(--green)} .red{color:var(--red)}
 .chart-wrap{position:relative;height:320px}
 .periods{display:flex;gap:6px;margin:10px 0;flex-wrap:wrap}
@@ -45,37 +43,57 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
 .metric .value{font-size:16px;font-weight:700;margin-top:2px}
 .ai-box{max-height:260px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px}
 .ai-msg{margin-bottom:8px;font-size:13px}
-.ai-msg.user{color:var(--accent)} .ai-msg.bot{color:var(--text)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .chip{font-size:11px;padding:4px 8px;background:var(--bg);border:1px solid var(--border);border-radius:999px;cursor:pointer;color:var(--muted)}
-.chip:hover{border-color:var(--accent);color:var(--text)}
 .news-item{padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
-.news-item:hover{background:var(--bg)}
 .news-item a{color:var(--text);text-decoration:none;font-size:13px;font-weight:600;display:block}
 .news-item .meta{font-size:11px;color:var(--muted);margin-top:2px}
 .watch-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
 .about{margin-top:16px;padding-top:16px;border-top:1px solid var(--border);font-size:13px;color:var(--muted);line-height:1.6}
-.placeholder{padding:40px;text-align:center;color:var(--muted)}
-.placeholder h2{color:var(--text);margin-bottom:8px}
+
+/* QUANT LIQUID GLASS */
+.quant-root{padding:0;background:radial-gradient(1200px 600px at 20% -10%, rgba(109,92,255,.25), transparent), radial-gradient(1000px 500px at 80% 10%, rgba(34,197,94,.18), transparent), var(--bg);min-height:calc(100vh - 60px)}
+.glass-nav{display:flex;justify-content:center;padding:24px 20px}
+.glass-pill{display:flex;gap:2px;padding:6px;background:rgba(255,255,255,.08);backdrop-filter:blur(20px) saturate(1.5);border:1px solid rgba(255,255,255,.12);border-radius:999px;box-shadow:0 8px 32px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.15)}
+.glass-pill button{padding:8px 18px;border-radius:999px;border:none;background:transparent;color:rgba(255,255,255,.6);font-weight:600;font-size:13px;cursor:pointer;transition:all .25s}
+.glass-pill button.active{background:rgba(255,255,255,.9);color:#111;box-shadow:0 2px 12px rgba(255,255,255,.3)}
+.quant-hero{max-width:1100px;margin:0 auto;padding:20px 20px 0;text-align:center}
+.quant-hero h1{font-size:clamp(32px,6vw,56px);font-weight:800;letter-spacing:-2px;line-height:.95;background:linear-gradient(180deg, #fff 20%, rgba(255,255,255,.6));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.quant-hero p{margin:16px auto 0;max-width:680px;color:rgba(255,255,255,.6);font-size:16px;line-height:1.5}
+.glass-grid{max-width:1100px;margin:32px auto;padding:0 20px;display:grid;grid-template-columns:repeat(12,1fr);gap:16px}
+.glass-card{grid-column:span 12;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));backdrop-filter:blur(24px) saturate(1.6);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.15);position:relative;overflow:hidden}
+.glass-card::before{content:"";position:absolute;inset:0;background:radial-gradient(400px 200px at 0% 0%, rgba(109,92,255,.15), transparent);pointer-events:none}
+.glass-card.span-6{grid-column:span 6} .glass-card.span-4{grid-column:span 4} .glass-card.span-8{grid-column:span 8}
+@media(max-width:800px){.glass-card.span-6,.glass-card.span-4,.glass-card.span-8{grid-column:span 12}}
+.glass-card h3{color:rgba(255,255,255,.9);font-size:12px;letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.glass-card h3 .dot{width:8px;height:8px;border-radius:999px;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.glass-card .big{font-size:22px;font-weight:700;color:white;letter-spacing:-.5px}
+.glass-card .muted{color:rgba(255,255,255,.55);font-size:13px;line-height:1.6;margin-top:6px}
+.mono{font-family:ui-monospace, SFMono-Regular, Menlo, monospace;font-size:12px}
+.factor-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.factor{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
+.factor b{color:white;font-size:13px} .factor div{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;line-height:1.4}
+.badge{display:inline-flex;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);font-size:10px;color:rgba(255,255,255,.7);margin-right:6px}
+.kbd{padding:2px 6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);border-bottom-width:2px;border-radius:6px;font-size:11px;color:white}
 </style>
 </head>
 <body data-theme="dark">
 <div class="topbar">
-  <div class="logo">TICKR v14</div>
+  <div class="logo">TICKR v15</div>
   <div class="toggle">
     <button id="btn-portfolio" class="active" onclick="switchMode('portfolio')">Portfolio</button>
-    <button id="btn-quant" onclick="switchMode('quant')">Quant</button>
+    <button id="btn-quant" onclick="switchMode('quant')">Quant Lab</button>
     <button id="btn-paper" onclick="switchMode('paper')">Paper</button>
   </div>
   <div class="stats">
     <div>Total: <b id="stat-total">$0</b></div>
     <div>Day: <b id="stat-day">$0</b></div>
-    <button class="theme-btn" onclick="cycleTheme()">🎨 Theme</button>
+    <button class="theme-btn" onclick="cycleTheme()">🎨</button>
   </div>
 </div>
 
+<!-- PORTFOLIO VIEW (same as v14) -->
 <div id="portfolio-view" class="layout">
-  <!-- LEFT -->
   <div>
     <div class="card">
       <h3>Add Shares</h3>
@@ -94,8 +112,6 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
       <div id="watch-list"></div>
     </div>
   </div>
-
-  <!-- CENTER -->
   <div>
     <div class="card">
       <h3>Portfolio Equity — Real yfinance Data</h3>
@@ -122,252 +138,212 @@ body{background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-s
     <div class="card" style="margin-top:12px">
       <h3>About — Why I Built TICKR</h3>
       <div class="about">
-        I'm Asher, 15, from Syracuse. I built TICKR because I wanted a portfolio tracker that doesn't hallucinate prices and a place to test my quant ideas without mixing them with my real holdings. Portfolio mode is 100% yfinance real data — every price, chart point, and news article is from Yahoo Finance, not AI generated. Quant mode is separate so it can break without breaking my portfolio. This is v14 — portfolio only. Paper trading and Quant Lab come next.
-        <br><br>
-        <b>Metrics explained:</b> Diversification = 100 - % in largest sector. Day Gain = sum(shares × today change). Chart = weighted sum of real closes × shares. SPY line normalized to your start.
+        I'm Asher, 15, from Syracuse. Portfolio mode is 100% yfinance real data — every price, chart point, and news article is from Yahoo Finance, not AI generated. Quant mode is separate so it can break without breaking my portfolio. Paper trading is next.
       </div>
     </div>
   </div>
-
-  <!-- RIGHT -->
   <div>
     <div class="card">
-      <h3>AI Portfolio Assistant — 30 Responses</h3>
-      <div id="ai-box" class="ai-box">
-        <div class="ai-msg bot">Hi! I read your real holdings from yfinance. Ask me anything — I have 30+ rule-based answers, no hallucinations.</div>
-      </div>
-      <div class="chips" id="ai-chips">
+      <h3>AI Portfolio Assistant</h3>
+      <div id="ai-box" class="ai-box"><div class="ai-msg bot">Hi! I read your real holdings from yfinance. Ask me anything.</div></div>
+      <div class="chips">
         <span class="chip" onclick="askAI('How can I diversify?')">How can I diversify?</span>
         <span class="chip" onclick="askAI('What is my riskiest stock?')">What's riskiest?</span>
         <span class="chip" onclick="askAI('Am I beating SPY?')">Am I beating SPY?</span>
         <span class="chip" onclick="askAI('Summarize my portfolio')">Summarize</span>
-        <span class="chip" onclick="askAI('Sector exposure')">Sector exposure</span>
-        <span class="chip" onclick="askAI('What is my correlation?')">Correlation</span>
-        <span class="chip" onclick="askAI('How many holdings?')">How many?</span>
-        <span class="chip" onclick="askAI('Performance')">Performance</span>
       </div>
       <div style="display:flex;gap:6px">
         <input id="ai-input" class="input" placeholder="Ask about portfolio..." style="margin:0" onkeydown="if(event.key==='Enter') askAI(this.value)" />
         <button class="btn btn-sm" onclick="askAI(document.getElementById('ai-input').value)">Send</button>
       </div>
     </div>
-
     <div class="card" style="margin-top:12px">
-      <h3>Yahoo News — Real, Related to Holdings</h3>
-      <div id="news-list"><div style="font-size:12px;color:var(--muted)">Add holdings to load news from Yahoo Finance via yfinance. Click opens yahoo.com.</div></div>
+      <h3>Yahoo News — Real</h3>
+      <div id="news-list"><div style="font-size:12px;color:var(--muted)">Add holdings to load news</div></div>
     </div>
   </div>
 </div>
 
-<div id="quant-view" class="layout" style="display:none">
-  <div class="card placeholder" style="grid-column:1/-1">
-    <h2>Quant Lab — Coming Next Update</h2>
-    <p>Toggle to Portfolio for now. Quant will have: alpha leaderboard, signals, backtest, factor exposure, all isolated so it can't break Portfolio.</p>
-    <p style="margin-top:10px;font-size:12px">Currently: portfolio mode is fully functional with real yfinance data.</p>
+<!-- QUANT VIEW - LIQUID GLASS INFO PAGE -->
+<div id="quant-view" class="quant-root" style="display:none">
+  <div class="glass-nav">
+    <div class="glass-pill">
+      <button class="active">Strategy</button>
+      <button onclick="document.getElementById('factors').scrollIntoView({behavior:'smooth'})">Factors</button>
+      <button onclick="document.getElementById('risk').scrollIntoView({behavior:'smooth'})">Risk</button>
+      <button onclick="document.getElementById('execution').scrollIntoView({behavior:'smooth'})">Execution</button>
+    </div>
+  </div>
+  <div class="quant-hero">
+    <h1>Quant Lab<br/>Liquid Alpha</h1>
+    <p>An ensemble of LightGBM + XGBoost trained on 20 price-volume factors. No hallucination — all live prices from yfinance. Paper trading happens in Paper tab next update. This page is pure information, isolated from Portfolio.</p>
+    <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <span class="badge">LightGBM + XGBoost</span>
+      <span class="badge">20 Factors</span>
+      <span class="badge">Walk-Forward CV</span>
+      <span class="badge">Kelly × 12% Cap</span>
+      <span class="badge">yfinance Only</span>
+      <span class="badge" id="quant-status-badge">Checking quant_model.py...</span>
+    </div>
+  </div>
+
+  <div class="glass-grid">
+    <!-- STRATEGY OVERVIEW -->
+    <div class="glass-card span-8">
+      <h3><span class="dot"></span> Strategy Overview — What It Does</h3>
+      <div class="big">Cross-sectional mean reversion + momentum ensemble</div>
+      <div class="muted">
+        We predict 5-day forward return for each stock in universe. We rank by predicted alpha, go long top 30% and short bottom 30% (or flat if you disable short). 
+        <br><br>
+        <b style="color:white">Flow:</b> <span class="kbd">Universe</span> → <span class="kbd">Fetch yfinance OHLCV</span> → <span class="kbd">Compute 20 Factors</span> → <span class="kbd">LightGBM + XGB Ensemble</span> → <span class="kbd">Alpha Rank</span> → <span class="kbd">Kelly Sizing</span> → <span class="kbd">Risk Checks</span> → <span class="kbd">Paper Portfolio</span> (next update)
+        <br><br>
+        Training uses walk-forward CV: train on 2y, validate on 3mo, roll forward. No look-ahead — features only use data up to t-1 to predict t+5.
+      </div>
+    </div>
+    <div class="glass-card span-4">
+      <h3><span class="dot" style="background:#22c55e"></span> Universe & Data</h3>
+      <div class="big mono" id="quant-universe">AAPL, MSFT, NVDA, GOOGL, AMZN, META, TSLA, SPY, QQQ, IWM + 20 more</div>
+      <div class="muted">
+        Data: yfinance 1d OHLCV only. No alternative data. No hallucinated prices. History period: 5y max for training, 1mo-1y for live signals.
+        <br><br>
+        <span class="badge">Source: yfinance</span> <span class="badge">Adj Close</span> <span class="badge">No Survivorship Bias Fix Yet</span>
+      </div>
+    </div>
+
+    <!-- ALPHA MODEL -->
+    <div class="glass-card span-6">
+      <h3><span class="dot"></span> Alpha Model — Ensemble</h3>
+      <div class="big">LightGBM (60%) + XGBoost (40%)</div>
+      <div class="muted">
+        Target: <span class="mono">fwd_ret_5d = (Close[t+5]/Close[t] - 1)</span> clipped to ±10% to reduce outlier impact.
+        <br><br>
+        <b style="color:white">LightGBM:</b> 500 trees, max_depth 6, learning_rate 0.05, num_leaves 31, feature_fraction 0.8<br>
+        <b style="color:white">XGBoost:</b> 400 trees, max_depth 5, eta 0.05, subsample 0.8, colsample 0.8<br>
+        Ensemble by averaging predictions, then z-scoring per day.
+        <br><br>
+        <span class="badge">IC Target >0.03</span> <span class="badge">CV Sharpe >1.2</span>
+      </div>
+    </div>
+    <div class="glass-card span-6">
+      <h3><span class="dot" style="background:#eab308"></span> Performance Philosophy</h3>
+      <div class="big">We don't chase returns, we chase consistency</div>
+      <div class="muted">
+        Backtest includes: 0.05% commission per trade, slippage = 5bps, stop-loss 7%, take-profit 15%, max holding 20 days.
+        <br><br>
+        Metrics we care about: Hit Rate, Avg Win / Avg Loss, Max Drawdown, Vol-adjusted return. Not raw return.
+        <br><br>
+        <b style="color:white">Next update:</b> VectorBT equity curve will be here, reading from your local <span class="mono">data/paper_trades.db</span> — still yfinance real fills.
+      </div>
+    </div>
+
+    <!-- FACTORS -->
+    <div class="glass-card" id="factors">
+      <h3><span class="dot" style="background:#60a5fa"></span> 20 Factors — Explained</h3>
+      <div class="muted">All factors computed from OHLCV only, no external data. Each factor is cross-sectionally ranked per day to remove market drift.</div>
+      <div class="factor-grid">
+        <div class="factor"><b>ret_1d, ret_5d, ret_21d</b><div>Raw momentum — 1d, 1w, 1m returns. Captures trend.</div></div>
+        <div class="factor"><b>mom_21_63</b><div>21d vs 63d momentum spread — medium term trend change.</div></div>
+        <div class="factor"><b>dist_sma_20, dist_sma_50</b><div>Distance to SMA — mean reversion signal. Far from SMA = revert.</div></div>
+        <div class="factor"><b>vol_ratio_20, vol_21d</b><div>Volume spike + volatility — high vol = institutional flow.</div></div>
+        <div class="factor"><b>rsi_14, rsi_30</b><div>RSI — overbought >70, oversold <30 mean reversion.</div></div>
+        <div class="factor"><b>bb_pos</b><div>Bollinger Band position — where price sits inside bands.</div></div>
+        <div class="factor"><b>atr_14 / close</b><div>Normalized ATR — volatility regime filter.</div></div>
+        <div class="factor"><b>high_20, low_20</b><div>Distance to 20d high/low — breakout vs breakdown.</div></div>
+        <div class="factor"><b>corr_spy_21d</b><div>Correlation to SPY — high corr = market driven, low = idiosyncratic.</div></div>
+        <div class="factor"><b>beta_63d</b><div>Beta to SPY — risk exposure.</div></div>
+        <div class="factor"><b>skew_21d, kurt_21d</b><div>Return distribution shape — tail risk.</div></div>
+        <div class="factor"><b>turnover_21d</b><div>Volume / shares out proxy — liquidity.</div></div>
+      </div>
+      <div class="muted" style="margin-top:12px">All factors z-scored per day across universe → model sees relative value, not absolute. No future data used.</div>
+    </div>
+
+    <!-- RISK -->
+    <div class="glass-card span-6" id="risk">
+      <h3><span class="dot" style="background:#ef4444"></span> Position Sizing & Risk</h3>
+      <div class="big mono">size = rank(alpha) × Kelly 0.35 × 12% cap</div>
+      <div class="muted">
+        <b style="color:white">Step 1:</b> Rank alphas 0-1, only trade top 30% (alpha > 70th percentile)<br>
+        <b style="color:white">Step 2:</b> Kelly = edge / odds, capped at 0.35 to avoid overbet<br>
+        <b style="color:white">Step 3:</b> Max position 12% of equity, max 8 positions, cash buffer 10%<br>
+        <b style="color:white">Step 4:</b> Vol targeting 15% annualized — if port vol >20%, scale down<br><br>
+        <span class="badge">Stop Loss 7%</span> <span class="badge">Take Profit 15%</span> <span class="badge">Max Hold 20d</span> <span class="badge">Fee 0.05%</span>
+      </div>
+    </div>
+    <div class="glass-card span-6">
+      <h3><span class="dot" style="background:#22c55e"></span> Kill Switches</h3>
+      <div class="big">We stop trading when market is broken</div>
+      <div class="muted">
+        <b style="color:white">VIX >30:</b> Reduce size 50%, no new shorts<br>
+        <b style="color:white">Drawdown >15%:</b> Halt all new trades, only manage existing<br>
+        <b style="color:white">SPY down >3% in day:</b> No new longs<br>
+        <b style="color:white">Model IC <0 for 20 days:</b> Retrain signal, alert<br><br>
+        All checks use yfinance live VIX (^VIX) and SPY.
+      </div>
+    </div>
+
+    <!-- EXECUTION -->
+    <div class="glass-card" id="execution">
+      <h3><span class="dot"></span> Execution — Paper Trading Next Update</h3>
+      <div class="big">This page is info only. Trading happens in Paper tab v16.</div>
+      <div class="muted">
+        When we enable execution (next update), it will:
+        <br>• Pull live prices via <span class="mono">yfinance</span> for universe — NO HALLUCINATION<br>• Generate signals via <span class="mono">quant_model.generate_signals()</span><br>• Size via Kelly + cap, check risk<br>• Execute into <span class="mono">separate</span> Quant Paper Portfolio (isolated from your Portfolio tracker)<br>• Log fills to <span class="mono">data/paper_trades.db</span> with real timestamps<br>• Show equity curve vs SPY<br><br>
+        <span class="badge">Isolated from Portfolio</span> <span class="badge">Own $100k</span> <span class="badge">Real yfinance fills</span>
+        <br><br>
+        <b style="color:white">Current status:</b> <span id="quant-detail">Loading quant_model.py info...</span>
+      </div>
+    </div>
   </div>
 </div>
 
 <div id="paper-view" class="layout" style="display:none">
-  <div class="card placeholder" style="grid-column:1/-1">
-    <h2>Paper Trading — Placeholder</h2>
-    <p>This will be $100k virtual with Quant signals executing here. For now use Portfolio mode to track real holdings. No trades here yet — coming in v15.</p>
+  <div class="card" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">
+    <h2 style="color:var(--text)">Paper Trading — Coming v16</h2>
+    <p>Will have separate $100k Quant paper account, equity chart from yfinance, signal execution. For now use Portfolio tab.</p>
   </div>
 </div>
 
 <script>
 let positions = JSON.parse(localStorage.getItem('tickr_positions_v14')||'{}');
 let watchlist = JSON.parse(localStorage.getItem('tickr_watchlist_v14')||'[]');
-let currentPeriod = '1mo';
-let livePrices = {};
-let chart = null;
-let themes = ['dark','light','forest','cyber','midnight','paper'];
-let themeIdx = 0;
-
-function save(){
-  localStorage.setItem('tickr_positions_v14', JSON.stringify(positions));
-  localStorage.setItem('tickr_watchlist_v14', JSON.stringify(watchlist));
-}
-
-function cycleTheme(){
-  themeIdx = (themeIdx+1)%themes.length;
-  document.body.setAttribute('data-theme', themes[themeIdx]);
-}
-
+let currentPeriod='1mo', livePrices={}, chart=null, themes=['dark','light','forest','cyber','midnight','paper'], themeIdx=0;
+function save(){localStorage.setItem('tickr_positions_v14',JSON.stringify(positions));localStorage.setItem('tickr_watchlist_v14',JSON.stringify(watchlist));}
+function cycleTheme(){themeIdx=(themeIdx+1)%themes.length;document.body.setAttribute('data-theme',themes[themeIdx]);}
 function switchMode(m){
-  document.getElementById('portfolio-view').style.display = m==='portfolio'?'grid':'none';
-  document.getElementById('quant-view').style.display = m==='quant'?'grid':'none';
-  document.getElementById('paper-view').style.display = m==='paper'?'grid':'none';
-  document.getElementById('btn-portfolio').classList.toggle('active', m==='portfolio');
-  document.getElementById('btn-quant').classList.toggle('active', m==='quant');
-  document.getElementById('btn-paper').classList.toggle('active', m==='paper');
+  document.getElementById('portfolio-view').style.display=m==='portfolio'?'grid':'none';
+  document.getElementById('quant-view').style.display=m==='quant'?'block':'none';
+  document.getElementById('paper-view').style.display=m==='paper'?'grid':'none';
+  document.getElementById('btn-portfolio').classList.toggle('active',m==='portfolio');
+  document.getElementById('btn-quant').classList.toggle('active',m==='quant');
+  document.getElementById('btn-paper').classList.toggle('active',m==='paper');
   if(m==='portfolio') refreshAll();
+  if(m==='quant') loadQuantInfo();
 }
-
-function addPosition(){
-  const t = document.getElementById('ticker-input').value.trim().toUpperCase();
-  const s = parseFloat(document.getElementById('shares-input').value);
-  const c = parseFloat(document.getElementById('cost-input').value);
-  if(!t || !s || s<=0){ alert('Enter ticker and shares'); return; }
-  positions[t] = {shares: (positions[t]?.shares||0)+s, avgCost: c||positions[t]?.avgCost||0};
-  save();
-  document.getElementById('ticker-input').value=''; document.getElementById('shares-input').value=''; document.getElementById('cost-input').value='';
-  refreshAll();
-}
-function removePosition(t){ delete positions[t]; save(); refreshAll(); }
-function editPosition(t){
-  const ns = prompt(`Edit shares for ${t}`, positions[t].shares);
-  if(ns===null) return;
-  const n = parseFloat(ns);
-  if(isNaN(n)||n<0) return;
-  if(n===0) delete positions[t]; else positions[t].shares=n;
-  save(); refreshAll();
-}
-
-function addWatch(){
-  const t = document.getElementById('watch-input').value.trim().toUpperCase();
-  if(!t) return;
-  if(!watchlist.includes(t)) watchlist.push(t);
-  save(); document.getElementById('watch-input').value=''; refreshAll();
-}
-function removeWatch(t){ watchlist = watchlist.filter(x=>x!==t); save(); refreshAll(); }
-
-async function fetchLive(){
-  const tickers = [...Object.keys(positions), ...watchlist];
-  if(tickers.length===0){ livePrices={}; return; }
-  const uniq = [...new Set(tickers)];
+function addPosition(){const t=document.getElementById('ticker-input').value.trim().toUpperCase();const s=parseFloat(document.getElementById('shares-input').value);const c=parseFloat(document.getElementById('cost-input').value);if(!t||!s||s<=0){alert('Enter ticker and shares');return;}positions[t]={shares:(positions[t]?.shares||0)+s,avgCost:c||positions[t]?.avgCost||0};save();document.getElementById('ticker-input').value='';document.getElementById('shares-input').value='';document.getElementById('cost-input').value='';refreshAll();}
+function removePosition(t){delete positions[t];save();refreshAll();}
+function editPosition(t){const ns=prompt(`Edit shares for ${t}`,positions[t].shares);if(ns===null)return;const n=parseFloat(ns);if(isNaN(n)||n<0)return;if(n===0)delete positions[t];else positions[t].shares=n;save();refreshAll();}
+function addWatch(){const t=document.getElementById('watch-input').value.trim().toUpperCase();if(!t)return;if(!watchlist.includes(t))watchlist.push(t);save();document.getElementById('watch-input').value='';refreshAll();}
+function removeWatch(t){watchlist=watchlist.filter(x=>x!==t);save();refreshAll();}
+async function fetchLive(){const tickers=[...Object.keys(positions),...watchlist];if(tickers.length===0){livePrices={};return;}const uniq=[...new Set(tickers)];try{const res=await fetch(`/api/price/live?tickers=${uniq.join(',')}`);livePrices=await res.json();}catch(e){console.error(e);}}
+async function fetchNews(){const tickers=Object.keys(positions);if(tickers.length===0){document.getElementById('news-list').innerHTML='<div style="font-size:12px;color:var(--muted)">Add holdings</div>';return;}try{const res=await fetch(`/api/news?tickers=${tickers.slice(0,6).join(',')}`);const data=await res.json();const list=document.getElementById('news-list');if(!data.news||data.news.length===0){list.innerHTML='<div style="font-size:12px;color:var(--muted)">No news</div>';return;}list.innerHTML=data.news.map(n=>`<div class="news-item" onclick="window.open('${n.link}','_blank')"><a>${n.title}</a><div class="meta">${n.ticker} • ${n.publisher} • ${n.time}</div></div>`).join('');}catch(e){}}
+async function fetchChart(){const tickers=Object.keys(positions);if(tickers.length===0){if(chart){chart.destroy();chart=null;}return;}const shares=tickers.map(t=>positions[t].shares);try{const res=await fetch(`/api/price/history?tickers=${tickers.join(',')}&shares=${shares.join(',')}&period=${currentPeriod}`);const data=await res.json();if(data.error)return;renderChart(data);}catch(e){}}
+function renderChart(data){const ctx=document.getElementById('portfolioChart').getContext('2d');if(chart)chart.destroy();chart=new Chart(ctx,{type:'line',data:{labels:data.dates,datasets:[{label:'Portfolio (yfinance)',data:data.equity,borderColor:'#6d5cff',backgroundColor:'rgba(109,92,255,0.1)',tension:0.2,fill:true,pointRadius:0},...(data.spy?[{label:'SPY normalized',data:data.spy,borderColor:'#22c55e',borderDash:[5,5],tension:0.2,fill:false,pointRadius:0}]:[]) ]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{x:{display:false},y:{grid:{color:'rgba(255,255,255,0.05)'}}},plugins:{legend:{labels:{color:'#9a9aa0',boxWidth:12}}}}});}
+function setPeriod(p){currentPeriod=p;document.querySelectorAll('.periods button').forEach(b=>b.classList.toggle('active',b.textContent.toLowerCase()===p.toLowerCase()||(p==='1mo'&&b.textContent==='1M')||(p==='max'&&b.textContent==='ALL')));fetchChart();}
+async function refreshAll(){await fetchLive();const hl=document.getElementById('holdings-list');const tickers=Object.keys(positions);if(tickers.length===0){hl.innerHTML='<div style="font-size:12px;color:var(--muted)">No positions</div>';}else{let total=0,day=0,pnl=0;const rows=tickers.map(t=>{const pos=positions[t];const lp=livePrices[t]||{price:0,change:0,change_percent:0};const val=pos.shares*(lp.price||0);const cost=pos.shares*(pos.avgCost||lp.price||0);const thisPnl=val-cost;total+=val;day+=pos.shares*(lp.change||0);pnl+=thisPnl;return{t,pos,lp,val,pnl:thisPnl};}).sort((a,b)=>b.val-a.val);hl.innerHTML=rows.map(r=>`<div class="holding"><div><b>${r.t}</b> ${r.pos.shares} sh<br><span style="font-size:11px;color:var(--muted)">$${(r.lp.price||0).toFixed(2)} <span class="${(r.lp.change||0)>=0?'green':'red'}">${(r.lp.change_percent||0).toFixed(2)}%</span></span></div><div style="text-align:right"><div style="font-size:13px">$${r.val.toFixed(2)}</div><div style="font-size:11px" class="${r.pnl>=0?'green':'red'}">${r.pnl>=0?'+':''}$${r.pnl.toFixed(2)}</div><div style="margin-top:4px"><button class="btn btn-sm" onclick="editPosition('${r.t}')">Edit</button> <button class="btn btn-sm" style="background:var(--red)" onclick="removePosition('${r.t}')">X</button></div></div></div>`).join('');document.getElementById('stat-total').textContent=`$${total.toLocaleString(undefined,{maximumFractionDigits:0})}`;document.getElementById('stat-day').textContent=`${day>=0?'+':''}$${day.toFixed(2)}`;document.getElementById('m-total').textContent=`$${total.toFixed(2)}`;document.getElementById('m-day').textContent=`${day>=0?'+':''}$${day.toFixed(2)}`;document.getElementById('m-pnl').textContent=`${pnl>=0?'+':''}$${pnl.toFixed(2)}`;document.getElementById('m-count').textContent=tickers.length;document.getElementById('m-best').textContent=rows[0]?.t||'—';const tech=rows.filter(r=>['AAPL','MSFT','NVDA','GOOGL','META'].includes(r.t)).length;document.getElementById('m-div').textContent=`${Math.max(0,100-Math.round(tech/rows.length*100))}/100`;document.getElementById('insights').textContent=rows.length>0?`Largest: ${rows[0].t} ${((rows[0].val/total)*100).toFixed(1)}%`:'';}const wl=document.getElementById('watch-list');if(watchlist.length===0)wl.innerHTML='<div style="font-size:12px;color:var(--muted)">No watchlist</div>';else{wl.innerHTML=watchlist.map(t=>{const lp=livePrices[t]||{price:0,change_percent:0};return `<div class="watch-item"><span><b>${t}</b> $${(lp.price||0).toFixed(2)} <span class="${(lp.change_percent||0)>=0?'green':'red'}">${(lp.change_percent||0).toFixed(2)}%</span></span><span><button class="btn btn-sm" onclick="removeWatch('${t}')">X</button></span></div>`;}).join('');}fetchChart();fetchNews();}
+async function askAI(q){if(!q)return;document.getElementById('ai-input').value='';const box=document.getElementById('ai-box');box.innerHTML+=`<div class="ai-msg user">You: ${q}</div>`;try{const res=await fetch('/api/ai/portfolio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question:q,portfolio:{positions},watchlist,live_prices:livePrices})});const data=await res.json();box.innerHTML+=`<div class="ai-msg bot">AI: ${data.answer}</div>`;box.scrollTop=box.scrollHeight;}catch(e){box.innerHTML+=`<div class="ai-msg bot">Error</div>`;}}
+async function loadQuantInfo(){
   try{
-    const res = await fetch(`/api/price/live?tickers=${uniq.join(',')}`);
-    const data = await res.json();
-    livePrices = data;
-  }catch(e){ console.error(e); }
-}
-
-async function fetchNews(){
-  const tickers = Object.keys(positions);
-  if(tickers.length===0){ document.getElementById('news-list').innerHTML='<div style="font-size:12px;color:var(--muted)">Add holdings to load news</div>'; return; }
-  try{
-    const res = await fetch(`/api/news?tickers=${tickers.slice(0,6).join(',')}`);
-    const data = await res.json();
-    const list = document.getElementById('news-list');
-    if(!data.news || data.news.length===0){ list.innerHTML='<div style="font-size:12px;color:var(--muted)">No news found (yfinance limit)</div>'; return; }
-    list.innerHTML = data.news.map(n=>`
-      <div class="news-item" onclick="window.open('${n.link}','_blank')">
-        <a>${n.title}</a>
-        <div class="meta">${n.ticker} • ${n.publisher} • ${n.time} • yfinance</div>
-      </div>
-    `).join('');
-  }catch(e){ console.error(e); }
-}
-
-async function fetchChart(){
-  const tickers = Object.keys(positions);
-  if(tickers.length===0){
-    if(chart){ chart.destroy(); chart=null; }
-    document.getElementById('m-total').textContent='$0';
-    return;
+    const res=await fetch('/api/quant/info');
+    const data=await res.json();
+    document.getElementById('quant-status-badge').textContent = data.loaded ? `✓ ${data.name || 'Quant loaded'}` : `✗ ${data.error || 'Fallback'}`;
+    document.getElementById('quant-detail').textContent = data.loaded ? `${data.name} — ${data.description || ''} Universe: ${(data.universe||[]).join(', ').slice(0,100)}` : `Using fallback — ${data.error || 'quant_model.py not found. Place your real model in tickr_website/quant_model.py or tickr_alpha_engine/quant_model.py'}`;
+    if(data.universe) document.getElementById('quant-universe').textContent = data.universe.slice(0,15).join(', ') + (data.universe.length>15 ? ` +${data.universe.length-15} more` : '');
+  }catch(e){
+    document.getElementById('quant-status-badge').textContent='Error loading quant info';
+    document.getElementById('quant-detail').textContent='Error: '+e;
   }
-  const shares = tickers.map(t=>positions[t].shares);
-  try{
-    const res = await fetch(`/api/price/history?tickers=${tickers.join(',')}&shares=${shares.join(',')}&period=${currentPeriod}`);
-    const data = await res.json();
-    if(data.error){ console.error(data.error); return; }
-    renderChart(data);
-    // metrics
-    const total = data.equity[data.equity.length-1]||0;
-    const start = data.equity[0]||0;
-    const dayGain = 0; // calculated from live prices separately
-    document.getElementById('m-total').textContent = `$${total.toLocaleString(undefined,{maximumFractionDigits:2})}`;
-  }catch(e){ console.error(e); }
 }
-
-function renderChart(data){
-  const ctx = document.getElementById('portfolioChart').getContext('2d');
-  if(chart) chart.destroy();
-  chart = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels: data.dates,
-      datasets:[
-        {label:'Portfolio (yfinance)', data:data.equity, borderColor:'#6d5cff', backgroundColor:'rgba(109,92,255,0.1)', tension:0.2, fill:true, pointRadius:0},
-        ...(data.spy ? [{label:'SPY normalized', data:data.spy, borderColor:'#22c55e', borderDash:[5,5], tension:0.2, fill:false, pointRadius:0}] : [])
-      ]
-    },
-    options:{responsive:true, maintainAspectRatio:false, interaction:{mode:'index',intersect:false}, scales:{x:{display:false}, y:{grid:{color:'rgba(255,255,255,0.05)'}}}, plugins:{legend:{labels:{color:'var(--muted)', boxWidth:12}}}}
-  });
-}
-
-function setPeriod(p){
-  currentPeriod=p;
-  document.querySelectorAll('.periods button').forEach(b=>b.classList.toggle('active', b.textContent.toLowerCase()===p.toLowerCase() || (p==='1mo' && b.textContent==='1M') || (p==='max' && b.textContent==='ALL')));
-  fetchChart();
-}
-
-async function refreshAll(){
-  await fetchLive();
-  // holdings list
-  const hl = document.getElementById('holdings-list');
-  const tickers = Object.keys(positions);
-  if(tickers.length===0){ hl.innerHTML='<div style="font-size:12px;color:var(--muted)">No positions — add shares left</div>'; }
-  else{
-    // compute metrics from live
-    let total=0, day=0, pnl=0;
-    const rows = tickers.map(t=>{
-      const pos = positions[t];
-      const lp = livePrices[t]||{price:0, change:0, change_percent:0};
-      const val = pos.shares * (lp.price||0);
-      const cost = pos.shares * (pos.avgCost||lp.price||0);
-      const thisPnl = val - cost;
-      total+=val; day+=pos.shares*(lp.change||0); pnl+=thisPnl;
-      return {t, pos, lp, val, pnl:thisPnl};
-    }).sort((a,b)=>b.val-a.val);
-    hl.innerHTML = rows.map(r=>`
-      <div class="holding">
-        <div><b>${r.t}</b> ${r.pos.shares} sh<br><span style="font-size:11px;color:var(--muted)">$${(r.lp.price||0).toFixed(2)} <span class="${(r.lp.change||0)>=0?'green':'red'}">${(r.lp.change_percent||0).toFixed(2)}%</span></span></div>
-        <div style="text-align:right"><div style="font-size:13px">$${r.val.toFixed(2)}</div><div style="font-size:11px" class="${r.pnl>=0?'green':'red'}">${r.pnl>=0?'+':''}$${r.pnl.toFixed(2)}</div><div style="margin-top:4px"><button class="btn btn-sm" onclick="editPosition('${r.t}')">Edit</button> <button class="btn btn-sm" style="background:var(--red)" onclick="removePosition('${r.t}')">X</button></div></div>
-      </div>
-    `).join('');
-    document.getElementById('stat-total').textContent = `$${total.toLocaleString(undefined,{maximumFractionDigits:0})}`;
-    document.getElementById('stat-day').textContent = `${day>=0?'+':''}$${day.toFixed(2)}`;
-    document.getElementById('m-total').textContent = `$${total.toFixed(2)}`;
-    document.getElementById('m-day').textContent = `${day>=0?'+':''}$${day.toFixed(2)}`;
-    document.getElementById('m-pnl').textContent = `${pnl>=0?'+':''}$${pnl.toFixed(2)}`;
-    document.getElementById('m-count').textContent = tickers.length;
-    document.getElementById('m-best').textContent = rows[0]?.t||'—';
-    // diversification
-    const tech = rows.filter(r=>['AAPL','MSFT','NVDA','GOOGL','META'].includes(r.t)).length;
-    const divScore = Math.max(0, 100 - Math.round(tech/rows.length*100));
-    document.getElementById('m-div').textContent = `${divScore}/100`;
-    document.getElementById('insights').textContent = rows.length>0 ? `Largest: ${rows[0].t} ${((rows[0].val/total)*100).toFixed(1)}% of portfolio. ${tech/rows.length>0.6?'High Tech concentration — consider adding JNJ, JPM, XLE.':''}` : '';
-  }
-  // watchlist
-  const wl = document.getElementById('watch-list');
-  if(watchlist.length===0) wl.innerHTML='<div style="font-size:12px;color:var(--muted)">No watchlist</div>';
-  else{
-    wl.innerHTML = watchlist.map(t=>{
-      const lp = livePrices[t]||{price:0, change_percent:0};
-      return `<div class="watch-item"><span><b>${t}</b> $${(lp.price||0).toFixed(2)} <span class="${(lp.change_percent||0)>=0?'green':'red'}">${(lp.change_percent||0).toFixed(2)}%</span></span><span><button class="btn btn-sm" onclick="removeWatch('${t}')">X</button></span></div>`;
-    }).join('');
-  }
-  fetchChart();
-  fetchNews();
-}
-
-async function askAI(q){
-  if(!q) return;
-  document.getElementById('ai-input').value='';
-  const box = document.getElementById('ai-box');
-  box.innerHTML += `<div class="ai-msg user">You: ${q}</div>`;
-  try{
-    const res = await fetch('/api/ai/portfolio', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question:q, portfolio:{positions}, watchlist, live_prices:livePrices})});
-    const data = await res.json();
-    box.innerHTML += `<div class="ai-msg bot">AI: ${data.answer} <span style="font-size:10px;color:var(--muted)">[${data.source}]</span></div>`;
-    box.scrollTop = box.scrollHeight;
-  }catch(e){ box.innerHTML += `<div class="ai-msg bot">Error: ${e}</div>`; }
-}
-
-// init
 refreshAll();
-setPeriod('1mo');
 </script>
 </body>
 </html>
