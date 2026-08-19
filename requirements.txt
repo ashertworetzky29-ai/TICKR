@@ -5,3 +5,5 @@ yfinance
 pandas
 numpy
 lxml
+curl_cffi
+requests
