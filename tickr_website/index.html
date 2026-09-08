@@ -71,18 +71,16 @@ h1,h2,h3{font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacin
 </style>
 </head>
 <body>
-<div class="nav">
-  <div class="logo"><img src="tickr-512.png" alt="" onerror="this.style.display='none'"><div class="word">TICKR</div></div>
-  <div class="nav-right">
+<div class="nav" style="height:44px; padding:0 32px; display:flex; align-items:center; justify-content:flex-end; border-bottom:1px solid var(--line); background:var(--bg); position:sticky; top:0; z-index:20;">
+  <div class="nav-right" style="display:flex; align-items:center; gap:16px; font-size:13px;">
     <span id="stat-total" class="mono" style="font-weight:600">$—</span>
     <span id="stat-day" class="mono" style="color:var(--ink-60)">$—</span>
-    <button class="cta" onclick="document.getElementById('add-section').scrollIntoView({behavior:'smooth'})">Add holding</button>
   </div>
 </div>
 
-<div class="hero">
-  <h1>Your portfolio, live.</h1>
-  <p>Holdings, chart vs SPY, and Yahoo Finance news for your tickers. Edit and remove holdings, saves locally.</p>
+<div class="hero" style="padding:48px 32px 24px; display:flex; align-items:center; gap:18px; border-bottom:1px solid var(--line); max-width:1280px; margin:0 auto;">
+  <img src="tickr-512.png" alt="TICKR" style="width:64px;height:64px;border-radius:14px;" >
+  <h1 style="font-size:64px; letter-spacing:-0.04em; line-height:0.9;">TICKR</h1>
 </div>
 
 <div class="section" style="padding-top:40px">
@@ -95,7 +93,7 @@ h1,h2,h3{font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacin
         <input id="cost-input" class="input" type="number" placeholder="Total cost" onkeydown="if(event.key==='Enter') addPosition()">
       </div>
       <div style="font-size:11px; color:var(--ink-60); margin:8px 0 12px;">Avg = cost / shares. Press Enter to save.</div>
-      <button class="btn btn-accent" onclick="addPosition()">Add holding</button>
+      <button class="btn btn-accent" onclick="addPosition()"></button>
       <div style="height:1px; background:var(--line); margin:20px 0"></div>
       <h3>Holdings — edit & remove</h3>
       <div id="holdings-list"><div style="font-size:12px; color:var(--ink-60)">No holdings yet — add one above.</div></div>
@@ -130,7 +128,7 @@ h1,h2,h3{font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacin
     <div class="panel">
       <h3>Yahoo Finance — for your holdings</h3>
       <div style="font-size:11px; color:var(--ink-60); margin-bottom:12px;">Live links that open real articles. Updates when you add tickers.</div>
-      <div id="news-list"><div style="font-size:12px; color:var(--ink-60)">Add holdings to see news</div></div>
+      <div id="news-list"><div style="font-size:12px; color:var(--ink-60)">s to see news</div></div>
     </div>
   </div>
 </div>
