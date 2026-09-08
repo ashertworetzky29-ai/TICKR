@@ -136,7 +136,16 @@ def get_history(ticker, period="1mo"):
     return None
 
 @app.route("/")
-def root(): return jsonify({"status":"TICKR v35 portfolio only - no quant","version":"v35"})
+def root():
+    # Serve the website, not JSON
+    try:
+        return app.send_static_file("index.html")
+    except:
+        from flask import send_from_directory
+        return send_from_directory(".", "index.html")
+
+@app.route("/health")
+def health(): return jsonify({"status":"TICKR v35 portfolio only - no quant","version":"v35"})
 
 @app.route("/api/price/live")
 def price_live():
